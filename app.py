@@ -103,10 +103,11 @@ body{font-family:system-ui,Segoe UI,Roboto;background:#f8fafc;margin:0;color:#0f
 
 @app.route("/", methods=["GET","POST"])
 def home():
-        raw_q = (request.form.get("q","Driver") if request.method=="POST" else request.args.get("q","Driver")).strip()
-        raw_loc = (request.form.get("loc","South Africa") if request.method=="POST" else request.args.get("loc","South Africa")).strip()
+    raw_q = (request.form.get("q","Driver") if request.method=="POST" else request.args.get("q","Driver")).strip()
+    raw_loc = (request.form.get("loc","South Africa") if request.method=="POST" else request.args.get("loc","South Africa")).strip()
     if not raw_q: raw_q = "Driver"
     if not raw_loc: raw_loc = "South Africa"
+
 
     # WAF CHECK
     if is_traversal_attack(raw_q) or is_traversal_attack(raw_loc):
@@ -125,7 +126,7 @@ def secure_headers(resp):
     resp.headers['X-Frame-Options'] = 'DENY'
     resp.headers['X-XSS-Protection'] = '1; mode=block'
     resp.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    resp.headers['Content-Security-Policy'] = "default-src 'self' https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src https://api.adzuna.com"
+    resp.headers['Content-Security-Policy'] = "default-src 'self' https:; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src https://api.adzuna.com https://googleads.g.doubleclick.net https:; frame-src https://googleads.g.doubleclick.net"
     return resp
 
 @app.route("/health")
