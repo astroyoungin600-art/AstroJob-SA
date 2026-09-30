@@ -72,7 +72,7 @@ def get_jobs(q="Driver", loc="South Africa"):
     return jobs
 
 HTML = """<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Astro Job SA - Made by Mthembisi</title>
 <meta name="description" content="Real verified jobs in South Africa - No scams. Made by Mthembisi">
 <style>
@@ -134,3 +134,19 @@ def health():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)
+
+@app.route('/ads.txt')
+def ads_txt():
+    return "google.com, pub-2133699761079270, DIRECT, f08c47fec0942fa0", 200, {'Content-Type': 'text/plain'}
+
+@app.route('/privacy')
+def privacy():
+    return "<h1>Privacy Policy - AstroJob SA</h1><p>We use Adzuna API. No personal data collected. Contact: astroyoungin600@gmail.com</p><p>AdSense uses cookies.</p><a href='/'>Back</a>"
+
+@app.route('/about')
+def about():
+    return "<h1>About AstroJob SA</h1><p>Real verified jobs from Adzuna, no scams. Made by Mthembisi in SA.</p><a href='/'>Back</a>"
+
+@app.route('/contact')
+def contact():
+    return "<h1>Contact</h1><p>Email: astroyoungin600@gmail.com<br>GitHub: astroyoungin600-art/AstroJob-SA</p><a href='/'>Back</a>"
