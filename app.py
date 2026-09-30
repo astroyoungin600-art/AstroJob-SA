@@ -103,8 +103,10 @@ body{font-family:system-ui,Segoe UI,Roboto;background:#f8fafc;margin:0;color:#0f
 
 @app.route("/", methods=["GET","POST"])
 def home():
-    raw_q = request.form.get("q","Driver") if request.method=="POST" else request.args.get("q","Driver")
-    raw_loc = request.form.get("loc","South Africa") if request.method=="POST" else request.args.get("loc","South Africa")
+        raw_q = (request.form.get("q","Driver") if request.method=="POST" else request.args.get("q","Driver")).strip()
+        raw_loc = (request.form.get("loc","South Africa") if request.method=="POST" else request.args.get("loc","South Africa")).strip()
+    if not raw_q: raw_q = "Driver"
+    if not raw_loc: raw_loc = "South Africa"
 
     # WAF CHECK
     if is_traversal_attack(raw_q) or is_traversal_attack(raw_loc):
