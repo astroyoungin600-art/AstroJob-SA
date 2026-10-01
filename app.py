@@ -110,19 +110,24 @@ def ads_txt():
 
 @app.route('/health')
 def health():
-    return {"status":"ok","app":"Astro Job SA","by":"Mthembisi","waf":"active","security":"No SQL, XSS protected, Traversal proof"}
+    return {"status":"ok","app":"Astro Job SA","by":"Mthembisi","waf":"active"}
 
 @app.route('/privacy')
 def privacy():
-    return "<h1>Privacy Policy - AstroJob SA</h1><p>We use Adzuna API. No DB, no SQL. No personal data stored. AdSense uses cookies. Contact: astroyoungin600@gmail.com</p><a href='/'>Back</a>"
+    return open('privacy.html').read()
 
 @app.route('/about')
 def about():
-    return "<h1>About AstroJob SA</h1><p>Real verified jobs from Adzuna, no scams. Made by Mthembisi in SA. Security: No SQL injection possible (no DB), XSS protected, Path Traversal blocked by WAF.</p><a href='/'>Back</a>"
+    return """<h1>About Astro Job SA - Made by Mthembisi</h1>
+    <p>Built in Johannesburg for SA youth. No scams, no fees, just real verified jobs.</p>
+    <p>Contact: astroyoungin600@gmail.com</p>
+    <a href='/'>Back</a>"""
 
 @app.route('/contact')
 def contact():
-    return "<h1>Contact</h1><p>Email: astroyoungin600@gmail.com</p><a href='/'>Back</a>"
+    return """<h1>Contact</h1>
+    <p>Email: astroyoungin600@gmail.com<br>Johannesburg, SA</p>
+    <a href='/'>Back</a>"""
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)
