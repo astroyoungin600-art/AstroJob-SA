@@ -132,3 +132,18 @@ def contact():
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)
+
+@app.after_request
+def inject_footer(response):
+    try:
+        if response.mimetype=='text/html' and response.status_code==200:
+            html=response.get_data(as_text=True)
+            if '</body>' in html and 'Privacy Policy' not in html:
+                footer='<div style="text-align:center;padding:20px;font-size:14px;background:#f8f9fa;margin-top:40px"><a href="/privacy" style="color:#555;margin:0 10px">Privacy Policy</a> | <a href="/about" style="color:#555;margin:0 10px">About</a> | <a href="/" style="color:#555;margin:0 10px">Home</a><br><small>© 2026 AstroJobSA - Built for SA Youth</small></div>'
+                html=html.replace('</body>', footer+'</body>')
+                response.set_data(html)
+        # Security headers too
+        response.headers['X-Frame-Options']='DENY'
+        response.headers['X-Content-Type-Options']='nosniff'
+    except: pass
+    return response
