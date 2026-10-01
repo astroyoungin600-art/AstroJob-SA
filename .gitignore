@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 .venv
+*.bak
+waf.log
