@@ -73,6 +73,7 @@ def get_jobs(q="Driver", loc="South Africa"):
 
 HTML = """<!DOCTYPE html>
 
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script>
 <title>Astro Job SA - Made by Mthembisi</title>
 <meta name="description" content="Real verified jobs in South Africa - No scams. Made by Mthembisi">
 <style>
