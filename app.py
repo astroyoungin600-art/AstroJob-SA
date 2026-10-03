@@ -150,3 +150,20 @@ def inject_footer(response):
         response.headers['X-Content-Type-Options']='nosniff'
     except: pass
     return response
+
+@app.route('/cv')
+def cv_page():
+    return render_template('cv.html')
+
+@app.route('/employee')
+@app.route('/employees')
+def employee_page():
+    # if you have employee.html else redirect to home
+    try:
+        return render_template('employee.html')
+    except:
+        return render_template('cv.html')
+
+@app.route('/post-job')
+def post_job():
+    return render_template('post-job.html')
