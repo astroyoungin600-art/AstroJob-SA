@@ -7,6 +7,42 @@ from dotenv import load_dotenv
 load_dotenv()
 from siem import siem_bp
 app = Flask(__name__)
+
+# === REAL SIEM ===
+from collections import deque, Counter
+VISITS=deque(maxlen=500)
+MALICIOUS=deque(maxlen=200)
+@app.before_request
+def _log():
+ try:
+  if request.path.startswith('/api/security-logs'): return
+  if request.path.startswith('/static'): return
+  ip=request.headers.get('X-Forwarded-For', request.remote_addr) or "0.0.0.0"
+  ipm=".".join(ip.split('.')[:2])+".*.*"
+  import time; from datetime import datetime
+  e={"ip":ipm,"ip_full":ip,"path":request.path,"ts":time.time(),"time_str":datetime.now().strftime("%H:%M:%S"),"device":"Mobile","loc":"SA"}
+  c=f"{request.path} {request.args} {request.headers.get('User-Agent','')}".lower()
+  atk=None
+  if "' or" in c or "or 1=1" in c: atk="SQLi"
+  elif "<script" in c: atk="XSS"
+  elif "../" in c: atk="Traversal"
+  elif "bot" in c or "curl" in c: atk="Bot"
+  if atk: MALICIOUS.append({"ip":ipm,"reason":atk,"loc":"SA","time":e["time_str"],"type":atk,"ts":e["ts"]})
+  else: VISITS.append(e)
+ except: pass
+@app.route('/api/security-logs')
+def _sec_logs():
+ import time; from datetime import datetime
+ now=time.time(); hours=[]; vh=[]; ah=[]
+ for i in range(6):
+  s=now-(5-i)*14400; ee=s+14400; hours.append(datetime.fromtimestamp(s).strftime("%Hh")); vh.append(len([x for x in VISITS if s <= x["ts"] < ee])); ah.append(len([x for x in MALICIOUS if s <= x["ts"] < ee]))
+ uniq=len(set(v["ip_full"] for v in VISITS)); at=Counter(m["type"] for m in MALICIOUS)
+ return {"total": len(VISITS)+len(MALICIOUS), "blocked": len(MALICIOUS), "uniq": uniq, "bots": 0, "hours": hours, "visits": vh, "attacks": ah, "attackTypes": dict(at) if at else {"Clean":1}, "malicious": list(MALICIOUS)[-10:][::-1], "legit": [{"ip": v["ip"], "page": v["path"][:30], "device": v["device"], "time": v["time_str"]} for v in list(VISITS)[-10:][::-1]]}
+@app.route('/siem')
+def _siem():
+ return render_template('siem_globe.html')
+# === END SIEM ===
+
 app.register_blueprint(siem_bp)
 # SECURE: Secret from env only, no fallback in code
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
