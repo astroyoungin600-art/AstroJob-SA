@@ -1,1 +1,23 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>SIEM LIVE</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>body{background:#0a0e1a;color:#e2e8f0;font-family:system-ui;padding:10px} .card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:10px;margin:10px 0}</style></head><body><h2>🛡️ ASTRO SIEM - LIVE</h2><div id="stats"></div><div class="card"><canvas id="trafficChart" height="120"></canvas></div><div class="card"><canvas id="attackChart" height="120"></canvas></div><div class="card"><table id="malTable"></table></div><div class="card"><table id="goodTable"></table></div><script>async function load(){let r=await fetch('/api/security-logs');let d=await r.json();document.getElementById('stats').innerHTML=`Total:${d.total} Blocked:${d.blocked} Unique:${d.uniq}`; if(window.tChart)window.tChart.destroy(); window.tChart=new Chart(document.getElementById('trafficChart'),{type:'line',data:{labels:d.hours,datasets:[{label:'Visits',data:d.visits,borderColor:'#22c55e'},{label:'Attacks',data:d.attacks,borderColor:'#ef4444'}]}}); window.aChart=new Chart(document.getElementById('attackChart'),{type:'bar',data:{labels:Object.keys(d.attackTypes),datasets:[{data:Object.values(d.attackTypes)}]}}); let mt=document.getElementById('malTable');mt.innerHTML=d.malicious.map(m=>`<tr><td>${m.ip}</td><td>${m.reason}</td><td>${m.time}</td></tr>`).join(''); let gt=document.getElementById('goodTable');gt.innerHTML=d.legit.map(g=>`<tr><td>${g.ip}</td><td>${g.page}</td><td>${g.time}</td></tr>`).join('');}load();setInterval(load,5000);</script></body></html>
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>ASTRO SIEM LIVE</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>body{background:#0a0e1a;color:#e2e8f0;font-family:system-ui;padding:12px;margin:0} .top{display:flex;gap:10px;margin:10px 0} .kpi{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:12px;flex:1;text-align:center} .kpi b{font-size:20px;display:block;color:#22c55e} .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:12px;margin:12px 0} table{width:100%;font-size:13px;border-collapse:collapse} th{color:#64748b;text-align:left;padding:6px} td{padding:8px 6px;border-top:1px solid #1f2937} .green{color:#22c55e} .red{color:#ef4444}</style></head><body>
+<h2 style="margin:0">🛡️ ASTRO SIEM - LIVE</h2><p style="color:#94a3b8;font-size:12px">Real visitors vs threats • Soweto, SA</p>
+<div class="top"><div class="kpi"><b id="totalVisits">0</b>Total</div><div class="kpi"><b id="malBlocked" style="color:#ef4444">0</b>Blocked</div><div class="kpi"><b id="uniqVis">0</b>Unique</div><div class="kpi"><b id="botHits">0</b>Bots</div></div>
+<div class="card"><div style="display:flex;gap:12px;font-size:12px;margin-bottom:8px"><span class="green">■ Visits</span><span class="red">■ Attacks</span></div><canvas id="trafficChart" height="120"></canvas></div>
+<div class="card"><canvas id="attackChart" height="110"></canvas></div>
+<div class="card"><b class="red">🔴 Malicious IPs (Blocked)</b><table id="malTable"></table></div>
+<div class="card"><b class="green">🟢 Live Visitors</b><table id="goodTable"></table></div>
+<script>
+async function load(){
+ let r=await fetch('/api/security-logs'); let d=await r.json();
+ document.getElementById('totalVisits').innerText=d.total;
+ document.getElementById('malBlocked').innerText=d.blocked;
+ document.getElementById('uniqVis').innerText=d.uniq;
+ document.getElementById('botHits').innerText=d.bots;
+ if(window.tChart)window.tChart.destroy();
+ window.tChart=new Chart(document.getElementById('trafficChart'),{type:'line',data:{labels:d.hours,datasets:[{label:'Visits',data:d.visits,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',tension:0.4},{label:'Attacks',data:d.attacks,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',tension:0.4}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#1f2937'}}}}});
+ if(window.aChart)window.aChart.destroy();
+ window.aChart=new Chart(document.getElementById('attackChart'),{type:'doughnut',data:{labels:Object.keys(d.attackTypes),datasets:[{data:Object.values(d.attackTypes),backgroundColor:['#22c55e','#ef4444','#f59e0b','#3b82f6','#8b5cf6']}]},options:{plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',boxWidth:12}}}}});
+ document.getElementById('malTable').innerHTML='<tr><th>IP Masked</th><th>Reason</th><th>Time</th></tr>'+d.malicious.map(m=>`<tr><td>${m.ip}</td><td class="red">${m.reason}</td><td>${m.time}</td></tr>`).join('');
+ document.getElementById('goodTable').innerHTML='<tr><th>IP Masked</th><th>Page</th><th>Time</th></tr>'+d.legit.map(g=>`<tr><td>${g.ip}</td><td>${g.page}</td><td>${g.time}</td></tr>`).join('');
+}
+load(); setInterval(load,3000);
+</script></body></html>
