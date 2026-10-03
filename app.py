@@ -84,6 +84,28 @@ def get_jobs(q="Driver", loc="South Africa"):
 
 HTML="""<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Astro Job SA - Made by Mthembisi</title><meta name="description" content="Real verified jobs in South Africa - No scams. Made by Mthembisi"><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script><style>body{font-family:system-ui;background:#f8fafc;margin:0;color:#0f172a}.header{background:#fff;padding:14px 20px;border-bottom:4px solid #0a2a8a;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}.logo-text{font-size:26px;font-weight:900;color:#0a2a8a}.logo-text span{color:#00a651}.hero{background:linear-gradient(135deg,#0a2a8a,#00a651);color:white;padding:28px 18px;text-align:center}.searchBox{background:#fff;padding:14px;border-radius:14px;max-width:900px;margin:-22px auto 15px;box-shadow:0 10px 25px rgba(0,0,0,.2);display:flex;gap:8px;flex-wrap:wrap}.searchBox input,select{padding:12px;border-radius:10px;border:1px solid #cbd5e1;flex:1;min-width:130px;font-size:15px}.btn{padding:12px 20px;border-radius:10px;border:0;background:#0a2a8a;color:white;font-weight:800;cursor:pointer}.card{background:#fff;padding:16px;border-radius:12px;margin:10px auto;max-width:900px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:5px solid #00a651}.apply{background:#0a2a8a;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block}.share{background:#25D366;color:white;padding:10px 14px;border-radius:8px;text-decoration:none;margin-left:6px;font-weight:700;display:inline-block}.footer{background:#0f172a;color:#94a3b8;padding:25px;text-align:center;margin-top:25px}.badge{background:#e0f2fe;color:#0a2a8a;padding:3px 8px;border-radius:12px;font-weight:700;font-size:11px}.adbox{max-width:900px;margin:14px auto;background:#fff;padding:12px;border-radius:10px;border:1px dashed #cbd5e1;text-align:center}</style></head><body>
 
+<!-- FIXED FLOATING HEADER - MTHEMBISI -->
+<style>
+.astro-top{position:sticky;top:0;z-index:999999;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:4px solid #0a2a8a;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.astro-logo b{font-size:22px;color:#0a2a8a}
+.astro-logo span{color:#00a651}
+.astro-logo small{display:block;color:#00a651;font-weight:800;letter-spacing:2px;font-size:10px}
+.astro-btns{display:flex;gap:8px}
+.astro-btns a{padding:10px 16px;border-radius:12px;font-weight:900;text-decoration:none;display:inline-block}
+.a-cv{background:#22c55e;color:#000}
+.a-post{background:#0a2a8a;color:#fff}
+.coffee-float{position:fixed;bottom:18px;right:14px;z-index:99999;background:#FFDD00;color:#000;padding:12px 20px;border-radius:30px;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,.25);text-decoration:none;border:2px solid #000}
+</style>
+<div class="astro-top">
+  <div class="astro-logo"><a href="/" style="text-decoration:none"><b>🚀 Astro Job SA</b><br><small>MADE BY MTHEMBISI</small></a></div>
+  <div class="astro-btns">
+    <a href="/cv" class="a-cv">📄 CV</a>
+    <a href="/post-job" class="a-post">+ Post Job</a>
+  </div>
+</div>
+<a href="https://www.buymeacoffee.com/mthembisi" target="_blank" class="coffee-float">☕ Buy Me a Coffee</a>
+
+
 <style>
 .site-header{position:sticky;top:0;z-index:9999;background:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0a2a8a;box-shadow:0 2px 10px rgba(0,0,0,.06)}
 .logo{line-height:1}
