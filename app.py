@@ -164,3 +164,11 @@ def inject_footer(response):
         response.headers['X-Content-Type-Options']='nosniff'
     except: pass
     return response
+
+@app.route('/channel-queue')
+def channel_queue():
+    try:
+        txt=open('channel_queue.txt').read()
+        return f"<pre style='white-space:pre-wrap;font-family:system-ui'>{txt}</pre><hr><a href='/api/bot-preview'>Preview</a> | <a href='/'>Home</a>"
+    except:
+        return "Queue empty - wait 1 min after deploy. <a href='/'>Home</a>"
