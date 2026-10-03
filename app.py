@@ -209,16 +209,6 @@ try:
     start_scheduler_bg()
 except: pass
 
-@app.route('/channel-queue')
-def channel_queue():
-    try:
-        if not os.path.exists("channel_queue.txt"):
-            fetch_and_prepare()
-        txt=open('channel_queue.txt').read()
-        return f"<pre style='white-space:pre-wrap;font-family:system-ui;padding:15px'>{txt}</pre><hr><a href='/'>Home</a>"
-    except Exception as e:
-        return f"Queue empty - {e} - Wait 1 min. <a href='/'>Home</a>"
-
 @app.route('/api/bot-preview')
 def bot_preview():
     jobs=[]
