@@ -6,8 +6,54 @@ from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
 
-# === SIEM PROTECTION - ONLY YOU ===
-SIEM_PASSWORD = "Astro2026!"
+# === SIEM LOGIN SYSTEM ===
+import secrets
+app.secret_key = os.environ.get("SECRET_KEY", "astro-siem-2026-secret-key-mthembisi")
+from flask import session, redirect, url_for
+
+SIEM_USER = "admin"
+SIEM_PASS = "Astro2026!"
+
+@app.route('/siem/login', methods=["GET","POST"])
+def siem_login():
+    if request.method == "POST":
+        u = request.form.get('username','')
+        p = request.form.get('password','')
+        if u == SIEM_USER and p == SIEM_PASS:
+            session['siem_auth'] = True
+            return redirect('/siem')
+        return """<h2 style="color:red">Wrong! Try again</h2><a href='/siem/login'>Back to login</a>"""
+    return """
+    <html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>SIEM Login</title>
+    <style>body{background:#0a0e1a;color:#fff;font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
+    .box{background:#111827;border:1px solid #1f2937;padding:30px;border-radius:16px;width:320px;text-align:center}
+    input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #333;background:#000;color:#fff}
+    button{width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800;cursor:pointer;margin-top:10px}
+    </style></head><body>
+    <div class="box"><h2>🛡️ ASTRO SIEM</h2><p style="color:#94a3b8;font-size:13px">Authorized Access Only</p>
+    <form method="POST"><input name="username" placeholder="Username (admin)" required>
+    <input name="password" type="password" placeholder="Password (Astro2026!)" required>
+    <button>LOGIN</button></form><p style="font-size:11px;color:#64748b;margin-top:12px">Full IP logs protected</p></div></body></html>
+    """
+
+@app.route('/siem/logout')
+def siem_logout():
+    session.pop('siem_auth', None)
+    return redirect('/siem/login')
+
+# Protect all SIEM routes
+@app.before_request
+def protect_siem_login():
+    protected = ['/siem', '/siem_globe', '/api/threats', '/api/security-logs']
+    if any(request.path.startswith(p) for p in protected):
+        if request.path == '/siem/login' or request.path == '/siem/logout':
+            return
+        if not session.get('siem_auth'):
+            return redirect('/siem/login')
+
+
+# === OLD PROTECTION REMOVED - ONLY YOU ===
+
 @app.before_request
 def protect_siem():
     if request.path.startswith('/siem') or request.path.startswith('/api/threats') or request.path.startswith('/api/security-logs'):
