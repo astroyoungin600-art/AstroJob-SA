@@ -172,3 +172,62 @@ def channel_queue():
         return f"<pre style='white-space:pre-wrap;font-family:system-ui'>{txt}</pre><hr><a href='/api/bot-preview'>Preview</a> | <a href='/'>Home</a>"
     except:
         return "Queue empty - wait 1 min after deploy. <a href='/'>Home</a>"
+
+# --- AUTO POSTER FIX ---
+import os, requests, threading, time
+from datetime import datetime
+
+def fetch_and_prepare():
+    ID=os.environ.get("ADZUNA_ID"); KEY=os.environ.get("ADZUNA_KEY")
+    if not ID: return []
+    try:
+        url=f"https://api.adzuna.com/v1/api/jobs/za/search/1?app_id={ID}&app_key={KEY}&results_per_page=10&what=General worker&where=South Africa&sort_by=date"
+        r=requests.get(url, timeout=15).json()
+        jobs=r.get('results',[])[:5]
+        out=[]
+        for j in jobs:
+            text=f"🚀 *{j.get('title','')}*\n📍 {j.get('location',{}).get('display_name','SA')} | 🏢 {j.get('company',{}).get('display_name','')}\n\n🔗 {j.get('redirect_url','')}\n\nWe do not need your details this is a Non Profit Program.WE DO NOT CHARGE MONEY, fully POPIA compliance\n\nAstro Job SA - Made by Mthembisi"
+            out.append(text)
+        with open("channel_queue.txt","w") as f:
+            f.write("\n\n---NEXT JOB---\n\n".join(out))
+        print(f"[{datetime.now()}] AutoBot prepared {len(out)} jobs")
+        return out
+    except Exception as e:
+        print(f"AutoBot error: {e}")
+        return []
+
+def start_scheduler_bg():
+    def loop():
+        while True:
+            fetch_and_prepare()
+            time.sleep(4*3600)
+    t=threading.Thread(target=loop, daemon=True)
+    t.start()
+
+# start it now
+try:
+    start_scheduler_bg()
+except: pass
+
+@app.route('/channel-queue')
+def channel_queue():
+    try:
+        if not os.path.exists("channel_queue.txt"):
+            fetch_and_prepare()
+        txt=open('channel_queue.txt').read()
+        return f"<pre style='white-space:pre-wrap;font-family:system-ui;padding:15px'>{txt}</pre><hr><a href='/'>Home</a>"
+    except Exception as e:
+        return f"Queue empty - {e} - Wait 1 min. <a href='/'>Home</a>"
+
+@app.route('/api/bot-preview')
+def bot_preview():
+    jobs=[]
+    try:
+        jobs=fetch_and_prepare()
+        html="<h1>Bot Preview - Copy to WhatsApp Channel</h1><a href='/channel-queue'>Queue</a> | <a href='/'>Home</a><hr>"
+        for j in jobs:
+            html+=f"<div style='border:1px solid #ddd;padding:10px;margin:10px'>{j.replace(chr(10), '<br>')}</div>"
+        return html
+    except Exception as e:
+        return f"Error {e}"
+
