@@ -1,213 +1,197 @@
-from siem import siem_bp
-from flask import Flask, render_template_string, request
-import requests, os, re, logging
-from datetime import datetime
-from urllib.parse import urlparse
+from siem_bp import siem_bp
+from flask import Flask, render_template_string, request, render_template, redirect
+import requests, os, re, logging, time
+from datetime import timedelta
 from dotenv import load_dotenv
 load_dotenv()
+from siem import siem_bp as siem_module_bp
 from siem import siem_bp
 app = Flask(__name__)
-from datetime import timedelta
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=10)
-app.secret_key = "astro-siem-2026-strong-key-mthembisi"
 app.register_blueprint(siem_bp)
-# SECURE: Secret from env only, no fallback in code
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
-if not app.config['SECRET_KEY']:
-    app.config['SECRET_KEY'] = os.urandom(24).hex()  # random if not set, not leaked
-
-# SECURE: MUST be in Render Env Vars - no hardcoded defaults
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+app.secret_key = "astro-siem-2026-strong-key-mthembisi"
+app.register_blueprint(siem_module_bp)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
 APP_ID = os.environ.get("ADZUNA_ID")
 APP_KEY = os.environ.get("ADZUNA_KEY")
-
-# Fail fast if keys missing - prevents running with leaked keys
-if not APP_ID or not APP_KEY:
-    logging.warning("ADZUNA keys missing from environment - job fetch will fail, set ADZUNA_ID and ADZUNA_KEY in Render")
-
-logging.basicConfig(filename="waf.log", level=logging.WARNING, format='%(asctime)s - %(message)s')
+job_cache = {"jobs":[], "time":0, "q":"", "loc":""}
 
 def is_traversal_attack(value):
     if not value: return False
     low = value.lower()
-    for p in ["..", "%2e%2e", "%252e", "etc/passwd", ".env", "/etc", "/proc", "\\", "%00"]:
+    for p in ["..", "%2e", "etc/passwd", ".env", "/etc", "/proc", "\\", "%00"]:
         if p in low: return True
     return False
-
 def is_safe_url(url):
     try:
+        from urllib.parse import urlparse
         p = urlparse(url)
-        return p.scheme in ("http","https") and p.netloc and "." in p.netloc and "adzuna" not in p.netloc.lower() or True
+        return p.scheme in ("http","https") and "." in p.netloc and "adzuna" not in p.netloc.lower()
     except: return False
-
 def sanitize(text, maxlen=40):
     if not text: return ""
     if is_traversal_attack(text):
-        logging.warning(f"WAF BLOCKED: IP={request.remote_addr} PAYLOAD={text[:100]}")
+        logging.warning(f"WAF BLOCKED: {text[:100]}")
         return ""
-    # Strict whitelist: letters, numbers, space, dash only - kills XSS/SQLi
     text = re.sub(r'[^a-zA-Z0-9 \-]', '', text)
     return text.strip()[:maxlen]
 
 def get_jobs(q="Driver", loc="South Africa"):
-    # If keys not set, return empty - don't crash
+    global job_cache
+    # Cache 5 mins for speed - fixes lag
+    now = time.time()
+    if job_cache["jobs"] and (now - job_cache["time"] < 300) and job_cache["q"]==q and job_cache["loc"]==loc:
+        return job_cache["jobs"]
     if not APP_ID or not APP_KEY:
+        logging.warning("ADZUNA keys missing")
         return []
-    q = sanitize(q, 40); loc = sanitize(loc, 40)
-    if not q: q="Driver"
-    if not loc: loc="South Africa"
-    url="https://api.adzuna.com/v1/api/jobs/za/search/1"
-    params={"app_id":APP_ID,"app_key":APP_KEY,"results_per_page":50,"what":q,"where":loc}
-    jobs=[]
+    q = sanitize(q, 40) or "Driver"
+    loc = sanitize(loc, 40) or "South Africa"
+    url = f"https://api.adzuna.com/v1/api/jobs/za/search/1"
+    params = {"app_id": APP_ID, "app_key": APP_KEY, "results_per_page": 50, "what": q, "where": loc}
     try:
-        resp=requests.get(url, params=params, timeout=12)
-        if resp.status_code!=200: return []
-        data=resp.json()
-        for j in data.get('results',[]):
-            title=j.get('title','')
-            if 'whatsapp' in title.lower() or 'telegram' in title.lower(): continue
-            redirect=j.get('redirect_url','')
-            if not is_safe_url(redirect): continue
-            # XSS: strip < >
-            safe_desc = (j.get('description','')[:200]).replace('<','').replace('>','').replace('"','').replace("'",'')
+        r = requests.get(url, params=params, timeout=12)
+        if r.status_code!=200: return []
+        data = r.json()
+        jobs=[]
+        for j in data.get("results",[]):
+            title = j.get("title","")
+            if "whatsapp" in title.lower() or "telegram" in title.lower(): continue
+            if not j.get("redirect_url"): continue
+            safe_desc = (j.get("description","")[:200]).replace("<","").replace(">","")
             jobs.append({
-                "title": re.sub(r'[^a-zA-Z0-9 \-\(\)]', '', title)[:120],
-                "company": re.sub(r'[^a-zA-Z0-9 \-\&]', '', j.get('company',{}).get('display_name','Top SA Company'))[:80],
-                "location": re.sub(r'[^a-zA-Z0-9 \-,]', '', j.get('location',{}).get('display_name',loc))[:80],
+                "title": re.sub(r'[^a-zA-Z0-9 \-]', ' ', title)[:120],
+                "company": re.sub(r'[^a-zA-Z0-9 \-]', ' ', j.get("company",{}).get("display_name","Top Company"))[:80],
+                "location": re.sub(r'[^a-zA-Z0-9 \-]', ' ', j.get("location",{}).get("display_name",loc))[:80],
                 "desc": safe_desc,
-                "url": redirect,
-                "created": j.get('created','')[:10]
+                "url": j.get("redirect_url",""),
+                "created": j.get("created","")[:10]
             })
+        job_cache = {"jobs": jobs, "time": now, "q": q, "loc": loc}
+        return jobs
     except Exception as e:
         logging.error(f"API Error: {e}")
-        jobs=[]
-    return jobs
+        return job_cache["jobs"] if job_cache["jobs"] else []
 
-HTML="""<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Astro Job SA - Made by Mthembisi</title><meta name="description" content="Real verified jobs in South Africa - No scams. Made by Mthembisi"><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script><style>body{font-family:system-ui;background:#f8fafc;margin:0;color:#0f172a}.header{background:#fff;padding:14px 20px;border-bottom:4px solid #0a2a8a;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}.logo-text{font-size:26px;font-weight:900;color:#0a2a8a}.logo-text span{color:#00a651}.hero{background:linear-gradient(135deg,#0a2a8a,#00a651);color:white;padding:28px 18px;text-align:center}.searchBox{background:#fff;padding:14px;border-radius:14px;max-width:900px;margin:-22px auto 15px;box-shadow:0 10px 25px rgba(0,0,0,.2);display:flex;gap:8px;flex-wrap:wrap}.searchBox input,select{padding:12px;border-radius:10px;border:1px solid #cbd5e1;flex:1;min-width:130px;font-size:15px}.btn{padding:12px 20px;border-radius:10px;border:0;background:#0a2a8a;color:white;font-weight:800;cursor:pointer}.card{background:#fff;padding:16px;border-radius:12px;margin:10px auto;max-width:900px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:5px solid #00a651}.apply{background:#0a2a8a;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block}.share{background:#25D366;color:white;padding:10px 14px;border-radius:8px;text-decoration:none;margin-left:6px;font-weight:700;display:inline-block}.footer{background:#0f172a;color:#94a3b8;padding:25px;text-align:center;margin-top:25px}.badge{background:#e0f2fe;color:#0a2a8a;padding:3px 8px;border-radius:12px;font-weight:700;font-size:11px}.adbox{max-width:900px;margin:14px auto;background:#fff;padding:12px;border-radius:10px;border:1px dashed #cbd5e1;text-align:center}</style></head><body>
-
-<!-- FIXED FLOATING HEADER - MTHEMBISI -->
+HTML = """<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Astro Job SA - Real Jobs | Made by Mthembisi</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script>
 <style>
-.astro-top{position:sticky;top:0;z-index:999999;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:4px solid #0a2a8a;box-shadow:0 2px 12px rgba(0,0,0,.08)}
-.astro-logo b{font-size:22px;color:#0a2a8a}
-.astro-logo span{color:#00a651}
-.astro-logo small{display:block;color:#00a651;font-weight:800;letter-spacing:2px;font-size:10px}
-.astro-btns{display:flex;gap:8px}
-.astro-btns a{padding:10px 16px;border-radius:12px;font-weight:900;text-decoration:none;display:inline-block}
-.a-cv{background:#22c55e;color:#000}
-.a-post{background:#0a2a8a;color:#fff}
-.coffee-float{position:fixed;bottom:18px;right:14px;z-index:99999;background:#FFDD00;color:#000;padding:12px 20px;border-radius:30px;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,.25);text-decoration:none;border:2px solid #000}
-</style>
-<div class="astro-top">
-  <div class="astro-logo"><a href="/" style="text-decoration:none"><b>🚀 Astro Job SA</b><br><small>MADE BY MTHEMBISI</small></a></div>
-  <div class="astro-btns">
-    <a href="/cv" class="a-cv">📄 CV</a>
-    <a href="/post-job" class="a-post">+ Post Job</a>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui;background:#f8fafc;color:#0f172a}
+#astroHeader{position:sticky;top:0;z-index:99999;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:4px solid #0a2a8a;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.logo{line-height:1.1}.logo a{text-decoration:none}.logo b{font-size:22px;color:#0a2a8a}.logo span{color:#00a651}.logo small{display:block;color:#00a651;font-weight:800;letter-spacing:2px;font-size:10px;margin-top:2px}
+.btns{display:flex;gap:8px}.btns a{padding:10px 18px;border-radius:12px;font-weight:900;text-decoration:none;font-size:14px}
+.btnCV{background:#22c55e;color:#000}.btnPost{background:#0a2a8a;color:#fff}
+.hero{background:linear-gradient(135deg,#0a2a8a 0%,#00a651 100%);color:#fff;padding:28px 16px;text-align:center}
+.hero h1{margin:0;font-size:26px}.hero p{opacity:.9}
+.searchBox{background:#fff;max-width:900px;margin:-18px auto 0;padding:14px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.1);display:flex;gap:8px;flex-wrap:wrap}
+.searchBox input{flex:1;min-width:180px;padding:12px;border:1px solid #cbd5e1;border-radius:10px}
+.searchBox button{padding:12px 20px;background:#0a2a8a;color:#fff;border:0;border-radius:10px;font-weight:900;cursor:pointer}
+.jobs{max-width:900px;margin:20px auto;padding:0 12px;display:grid;gap:12px}
+.job{background:#fff;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:4px solid #0a2a8a}
+.job h3{margin:0 0 6px;font-size:16px;color:#0a2a8a}.meta{font-size:12px;color:#64748b;margin-bottom:8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.actions a{padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:800;font-size:13px}
+.apply{background:#0a2a8a;color:#fff}.whats{background:#22c55e;color:#000}
+.coffeeF{position:fixed;bottom:18px;right:14px;z-index:99999;background:#FFDD00;color:#000;padding:12px 20px;border-radius:30px;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,.25);text-decoration:none;border:2px solid #000}
+footer{padding:30px;text-align:center;color:#64748b;font-size:12px}
+</style></head><body>
+<div id="astroHeader">
+  <div class="logo"><a href="/"><b>🚀 Astro Job SA</b><br><small>MADE BY MTHEMBISI</small></a></div>
+  <div class="btns">
+    <a href="/cv" class="btnCV">📄 CV</a>
+    <a href="/post-job" class="btnPost">+ Post Job</a>
   </div>
 </div>
-<a href="https://www.buymeacoffee.com/mthembisi" target="_blank" class="coffee-float">☕ Buy Me a Coffee</a>
-
-
-<style>
-.site-header{position:sticky;top:0;z-index:9999;background:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0a2a8a;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.logo{line-height:1}
-.logo b{font-size:22px;color:#0a2a8a}
-.logo span{color:#00a651}
-.logo small{display:block;color:#00a651;font-weight:800;letter-spacing:2px;font-size:11px}
-.h-btns{display:flex;gap:8px}
-.btn-cv{background:#22c55e;color:#000;padding:9px 16px;border-radius:10px;font-weight:900;text-decoration:none;border:0}
-.btn-post{background:#0a2a8a;color:#fff;padding:9px 16px;border-radius:10px;font-weight:900;text-decoration:none;border:0}
-.coffee-float{position:fixed;bottom:18px;right:14px;z-index:9999;background:#FFDD00;color:#000;padding:12px 20px;border-radius:30px;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,.25);text-decoration:none;border:2px solid #000}
-</style>
-<div class="site-header">
-  <div class="logo"><a href="/" style="text-decoration:none"><b>🚀 Astro</b> <b style="color:#0a2a8a">Job</b> <span>SA</span><small>MADE BY MTHEMBISI</small></a></div>
-  <div style="color:#00a651;font-weight:800;font-size:11px;letter-spacing:2px">MADE BY MTHEMBISI</div></div></div></div><div class=hero><h2 style="margin:0">Your Future Starts Here, Mzansi</h2><p style="max-width:720px;margin:12px auto"><b>"Umsebenzi wakho uqala lapha. Akuwona amanga, akuwona ama-scams - imisebenzi yangempela."</b><br>We built Astro Job SA because every young South African deserves a fair shot. No fees. No WhatsApp payments. Just real, verified opportunities.<br><small>Verified daily • Trusted by SA youth • Built in SA for SA</small></p></div><form method=POST autocomplete=off><div class=searchBox><input name=q value="{{q}}" placeholder="Job: Driver, Cashier, IT..." maxlength=40 pattern="[a-zA-Z0-9 ]+"><select name=loc><option value="South Africa" {% if loc=='South Africa' %}selected{%endif%}>South Africa</option><option value="Johannesburg" {% if loc=='Johannesburg' %}selected{%endif%}>Johannesburg</option><option value="Cape Town" {% if loc=='Cape Town' %}selected{%endif%}>Cape Town</option><option value="Durban" {% if loc=='Durban' %}selected{%endif%}>Durban</option><option value="Pretoria" {% if loc=='Pretoria' %}selected{%endif%}>Pretoria</option><option value="Port Elizabeth" {% if loc=='Port Elizabeth' %}selected{%endif%}>Port Elizabeth</option></select><button class=btn type=submit>Find Jobs</button></div></form><div style="max-width:900px;margin:0 auto;padding:0 12px"><b>{{jobs|length}} Verified Jobs</b> in {{loc}} for "{{q}}" • {{now}}</div>{% for j in jobs %}<div class=card><span class=badge>✓ VERIFIED • {{j.location}}</span><div style="font-weight:800;margin:6px 0;font-size:17px">{{j.title}}</div><small>{{j.company}} • {{j.created}}</small><p style="color:#475569;font-size:13px">{{j.desc}}...</p><a class=apply href="{{j.url}}" target=_blank rel="noopener">Apply on Company Site →</a><a class=share href="https://wa.me/?text={{ ('I found this job: '+j.title+' '+j.url) | urlencode }}" target=_blank>WhatsApp Share</a></div>{% if loop.index==4 %}<div class=adbox><small style="color:#888">Advertisement</small><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2133699761079270" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>{% endif %}{% if loop.index==10 %}<div class=adbox><small style="color:#888">Advertisement - Supports free jobs</small><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2133699761079270" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>{% endif %}{% endfor %}<div style="max-width:900px;margin:18px auto;background:#fff3cd;padding:14px;border-radius:10px;text-align:center"><b>📢 Share & Help Others Get Jobs</b><br><a style="display:inline-block;margin-top:8px;background:#25D366;color:white;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:800" href="https://wa.me/?text={{ share_text | urlencode }}" target=_blank>Share Astro Job SA 🚀</a></div><div class=footer><b style="color:white">Astro Job SA</b> - Made with ❤️ by Mthembisi<br>astroyoungin600@gmail.com • Johannesburg<br>© 2026 Astro Job SA • Powered by Adzuna Official API • Security: No SQL DB, XSS Protected, Path Traversal Proof + WAF, No sensitive disclosure</div>
-<a href="https://www.buymeacoffee.com/astrojobsa" target="_blank" style="position:fixed;bottom:24px;right:24px;background:#FFDD00;color:#000;padding:14px 22px;border-radius:999px;font-weight:800;text-decoration:none;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,0.25);font-family:system-ui;display:flex;align-items:center;gap:8px;border:2px solid #000;">☕ Buy Me a Coffee</a></body></html>"""
+<div class="hero">
+  <h1>Your Future Starts Here, Mzansi 🇿🇦</h1>
+  <p>Real verified jobs SA, no scams! - Built in Johannesburg for SA youth</p>
+  <p style="margin-top:8px;font-size:12px;background:rgba(255,255,255,.15);display:inline-block;padding:6px 12px;border-radius:20px">📄 Free CV Maker • Get 10x More Applicants</p>
+</div>
+<form method="POST" class="searchBox">
+  <input name="q" value="{{qq}}" placeholder="Job title, e.g. Driver, Cashier">
+  <input name="loc" value="{{loc}}" placeholder="Location, e.g. Johannesburg">
+  <button type="submit">🔍 Search Jobs</button>
+</form>
+<div class="jobs">
+{% for j in jobs %}
+<div class="job">
+  <h3>{{j.title}}</h3>
+  <div class="meta">🏢 {{j.company}} • 📍 {{j.location}} • 🕒 {{j.created}}</div>
+  <div style="font-size:13px;color:#334155">{{j.desc}}...</div>
+  <div class="actions">
+    <a href="{{j.url}}" target="_blank" class="apply">Apply on Company Site →</a>
+    <a href="https://wa.me/?text={{share_text}}%20{{j.url}}" target="_blank" class="whats">WhatsApp Share</a>
+  </div>
+</div>
+{% else %}
+<div style="text-align:center;padding:30px;background:#fff;border-radius:14px">No jobs found for <b>{{qq}}</b> in <b>{{loc}}</b>. Try Driver, Cashier, General Worker</div>
+{% endfor %}
+</div>
+<a href="https://www.buymeacoffee.com/mthembisi" target="_blank" class="coffeeF">☕ Buy Me a Coffee</a>
+</body></html>
+"""
 
 @app.route("/", methods=["GET","POST"])
 def home():
-    raw_q=(request.form.get("q","Driver") if request.method=="POST" else request.args.get("q","Driver")).strip()
-    raw_loc=(request.form.get("loc","South Africa") if request.method=="POST" else request.args.get("loc","South Africa")).strip()
-    if not raw_q: raw_q="Driver"
-    if not raw_loc: raw_loc="South Africa"
+    raw_q = (request.form.get("q","Driver") if request.method=="POST" else request.args.get("q","Driver")).strip()
+    raw_loc = (request.form.get("loc","South Africa") if request.method=="POST" else request.args.get("loc","South Africa")).strip()
     if is_traversal_attack(raw_q) or is_traversal_attack(raw_loc):
-        logging.warning(f"WAF 403: IP={request.remote_addr} q={raw_q} loc={raw_loc}")
-        return "<h1>403 Forbidden - WAF Blocked</h1>",403
-    q=sanitize(raw_q,40) or "Driver"
-    loc=sanitize(raw_loc,40) or "South Africa"
-    jobs=get_jobs(q,loc)
-    share_text=f"🚀 Astro Job SA - Made by Mthembisi - Real verified jobs SA, no scams! https://astrojob-sa.onrender.com"
-    return render_template_string(HTML, jobs=jobs, q=q, loc=loc, now=datetime.now().strftime("%d %b %Y"), share_text=share_text)
+        logging.warning(f"WAF 403: {raw_q} {raw_loc}")
+        return "<h1>403 Forbidden - WAF Blocked</h1>", 403
+    qq = sanitize(raw_q, 40) or "Driver"
+    loc_q = sanitize(raw_loc, 40) or "South Africa"
+    jobs = get_jobs(qq, loc_q)
+    import datetime
+    share_text = f"Astro Job SA - Made by Mthembisi - Real verified jobs SA, no scams! https://astrojobsa.onrender.com"
+    return render_template_string(HTML, jobs=jobs, qq=qq, loc=loc_q, share_text=share_text)
 
 @app.after_request
 def secure_headers(resp):
-    resp.headers['X-Content-Type-Options']='nosniff'
-    resp.headers['X-Frame-Options']='DENY'
-    resp.headers['X-XSS-Protection']='1; mode=block'
-    resp.headers['Referrer-Policy']='strict-origin-when-cross-origin'
-    resp.headers['Content-Security-Policy']="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src https://api.adzuna.com https://googleads.g.doubleclick.net https:; frame-src https://googleads.g.doubleclick.net"
-    resp.headers['Permissions-Policy']='geolocation=(), microphone=(), camera=()'
+    resp.headers['X-Frame-Options'] = 'DENY'
+    resp.headers['X-Content-Type-Options'] = 'nosniff'
+    resp.headers['X-XSS-Protection'] = '1; mode=block'
+    resp.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return resp
 
-@app.route('/ads.txt')
+@app.route("/ads.txt")
 def ads_txt():
     return "google.com, pub-2133699761079270, DIRECT, f08c47fec0942fa0", 200, {'Content-Type': 'text/plain'}
 
-@app.route('/health')
+@app.route("/health")
 def health():
     return {"status":"ok","app":"Astro Job SA","by":"Mthembisi","waf":"active"}
 
-@app.route('/privacy')
+@app.route("/privacy")
 def privacy():
-    return open('privacy.html').read()
+    try: return open("privacy.html").read()
+    except: return "<h1>Privacy Policy - Astro Job SA</h1><p>Contact: astroyoungin600@gmail.com</p>"
 
-@app.route('/about')
+@app.route("/about")
 def about():
-    return """<h1>About Astro Job SA - Made by Mthembisi</h1>
-    <p>Built in Johannesburg for SA youth. No scams, no fees, just real verified jobs.</p>
-    <p>Contact: astroyoungin600@gmail.com</p>
-    <a href='/'>Back</a>"""
+    return "<h1>About Astro Job SA - Made by Mthembisi</h1><p>Built in Johannesburg for SA youth. No scams, no fees, just real verified jobs.</p><p>Contact: astroyoungin600@gmail.com</p><a href='/'>Back</a>"
 
-@app.route('/contact')
+@app.route("/contact")
 def contact():
-    return """<h1>Contact</h1>
-    <p>Email: astroyoungin600@gmail.com<br>Johannesburg, SA</p>
-    <a href='/'>Back</a>"""
+    return "<h1>Contact</h1><p>Email: astroyoungin600@gmail.com<br>Johannesburg, SA</p><a href='/'>Back</a>"
 
-if __name__=="__main__":
-    app.run(host="0.0.0.0", port=8080, debug=False)
-
-@app.after_request
-def inject_footer(response):
-    try:
-        if response.mimetype=='text/html' and response.status_code==200:
-            html=response.get_data(as_text=True)
-            if '</body>' in html and 'Privacy Policy' not in html:
-                footer='<div style="text-align:center;padding:20px;font-size:14px;background:#f8f9fa;margin-top:40px"><a href="/privacy" style="color:#555;margin:0 10px">Privacy Policy</a> | <a href="/about" style="color:#555;margin:0 10px">About</a> | <a href="/" style="color:#555;margin:0 10px">Home</a><br><small>© 2026 AstroJobSA - Built for SA Youth</small></div>'
-                html=html.replace('</body>', footer+'</body>')
-                response.set_data(html)
-        # Security headers too
-        response.headers['X-Frame-Options']='DENY'
-        response.headers['X-Content-Type-Options']='nosniff'
-    except: pass
-    return response
-
-@app.route('/cv')
+@app.route("/cv")
 def cv_page():
-    return render_template('cv.html')
+    try: return render_template("cv.html")
+    except: return redirect("/")
 
-@app.route('/cv')
-@app.route('/cvs')
+@app.route("/cvs")
+def cvs_redirect():
+    return redirect("/cv")
+
+@app.route("/employee")
 def employee_page_disabled():
     return redirect("/cv")
-def employee_page_old_disabled():
-    # if you have employee.html else redirect to home
-    try:
-        return render_template('employee.html')
-    except:
-        return render_template('cv.html')
 
-@app.route('/post-job')
+@app.route("/post-job")
 def post_job():
-    return render_template('post-job.html')
+    try: return render_template("post-job.html")
+    except: return "<h1>Post a Job</h1><p>WhatsApp: 0812602918</p><a href='/'>Back</a>"
 
-# --- simple in-memory cache ---
-# put this near top after app = Flask
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080, debug=False)
