@@ -5,6 +5,20 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
+
+# === SIEM PROTECTION - ONLY YOU ===
+SIEM_PASSWORD = "Astro2026!"
+@app.before_request
+def protect_siem():
+    if request.path.startswith('/siem') or request.path.startswith('/api/threats') or request.path.startswith('/api/security-logs'):
+        key = request.args.get('key') or request.headers.get('X-SIEM-KEY')
+        # Allow if ?key=Astro2026!
+        if key != SIEM_PASSWORD:
+            # Check if already authenticated via cookie? For now require key
+            if request.path.startswith('/api/'):
+                return {"error":"Unauthorized - SIEM protected"}, 401
+            return f"<h1>401 - SIEM Protected</h1><p>Add ?key={SIEM_PASSWORD} to URL</p><a href='/'>Home</a>", 401
+
 # Register SIEM Blueprint - FULL IP
 try:
     from siem import siem_bp
