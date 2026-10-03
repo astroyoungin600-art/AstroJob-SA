@@ -1,11 +1,9 @@
-from siem import siem_bp
 from flask import Flask, render_template_string, render_template, request
 import requests, os, re, logging
 from datetime import datetime
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 load_dotenv()
-from siem import siem_bp
 app = Flask(__name__)
 
 # === REAL SIEM ===
@@ -43,7 +41,6 @@ def _siem():
  return render_template('siem_globe.html')
 # === END SIEM ===
 
-app.register_blueprint(siem_bp)
 # SECURE: Secret from env only, no fallback in code
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 if not app.config['SECRET_KEY']:
