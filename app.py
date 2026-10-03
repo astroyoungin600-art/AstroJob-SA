@@ -1,16 +1,18 @@
-from siem_bp import siem_bp
 from flask import Flask, render_template_string, request, render_template, redirect
 import requests, os, re, logging, time
 from datetime import timedelta
 from dotenv import load_dotenv
 load_dotenv()
-from siem import siem_bp as siem_module_bp
-from siem import siem_bp
+try:
+ from siem import siem_bp
+except:
+ siem_bp=None
+ # dummy
 app = Flask(__name__)
-app.register_blueprint(siem_bp)
+if siem_bp:
+ app.register_blueprint(siem_bp)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 app.secret_key = "astro-siem-2026-strong-key-mthembisi"
-app.register_blueprint(siem_module_bp)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
 APP_ID = os.environ.get("ADZUNA_ID")
 APP_KEY = os.environ.get("ADZUNA_KEY")
