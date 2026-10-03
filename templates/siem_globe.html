@@ -1,16 +1,21 @@
 <html><head>
+<meta http-equiv="Cache-Control" content="no-cache">
 <script src="//unpkg.com/globe.gl"></script>
-<style>body{margin:0;background:#000;color:#fff} #info{position:absolute;top:10px;left:10px;z-index:2}</style>
+<style>body{margin:0;background:#000;color:#fff;font-family:monospace} #info{position:absolute;top:10px;left:10px;z-index:2;background:rgba(0,0,0,0.9);padding:12px;border-radius:8px}</style>
 </head><body>
-<div id="info"><h2>AstroJobSA SIEM - LIVE</h2><p id="count">Loading...</p></div>
+<div id="info"><h3>SIEM REAL TIME</h3><p id="count">0 blocked</p><div id="list" style="font-size:12px"></div></div>
 <div id="globe"></div>
 <script>
-fetch('/api/threats').then(r=>r.json()).then(data=>{
- document.getElementById('count').innerText = data.length+' threats blocked'
- Globe()(document.getElementById('globe'))
+function load(){
+fetch('/api/threats?t='+Date.now()).then(r=>r.json()).then(data=>{
+ document.getElementById('count').innerText = data.length+' real threats';
+ document.getElementById('list').innerHTML = data.slice(-5).reverse().map(d=> `${d.time} ${d.ip} ${d.type}<br>`).join('') || 'No attacks yet - visit /admin to test';
+ if(data.length>0){
+  const w = Globe()(document.getElementById('globe'))
   .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-  .pointsData(data)
-  .pointLat('lat').pointLng('lng').pointColor(()=>'red').pointAltitude(0.1)
-  .pointLabel(d=> `${d.city} - ${d.type}`)
-})();
+  .pointsData(data).pointLat('lat').pointLng('lng').pointColor(()=>'red').pointAltitude(0.2).pointLabel(d=> `${d.ip} ${d.type}`);
+ }
+});
+}
+load(); setInterval(load,3000);
 </script></body></html>
