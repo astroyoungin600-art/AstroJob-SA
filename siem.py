@@ -34,6 +34,7 @@ def login():
     if request.method == "POST":
         if request.form.get('username')==SIEM_USER and request.form.get('password')==SIEM_PASS:
             session['siem_auth']=True
+            session.permanent = False
             return redirect('/siem')
         return "<h3 style=color:red>Wrong! <a href=/siem/login>Retry</a></h3>"
     return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:320px;text-align:center;border:1px solid #333"><h2>🛡️ SIEM Login</h2><form method=POST><input name=username placeholder=admin required style="width:100%;padding:10px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder=Astro2026! required style="width:100%;padding:10px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:10px;background:#22c55e;border:none;border-radius:8px;font-weight:800">LOGIN</button></form></div></body></html>"""
