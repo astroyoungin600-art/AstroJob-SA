@@ -5,6 +5,14 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
+# Register SIEM Blueprint - FULL IP
+try:
+    from siem import siem_bp
+    app.register_blueprint(siem_bp)
+    print("SIEM blueprint registered - FULL IP enabled")
+except Exception as e:
+    print(f"SIEM import failed: {e}")
+
 
 # === REAL SIEM - FULL IP VERSION ===
 from collections import deque, Counter
