@@ -1,60 +1,43 @@
 from flask import Flask, render_template_string, render_template, request
-import requests, os, re, logging
+import requests, os, re, logging, time
 from datetime import datetime
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
 
-# === REAL SIEM ===
+# === REAL SIEM - FULL IP VERSION ===
 from collections import deque, Counter
 VISITS=deque(maxlen=500)
 MALICIOUS=deque(maxlen=200)
+
 @app.before_request
 def _log():
- try:
-  if request.path.startswith('/api/security-logs'): return
-  if request.path.startswith('/static'): return
-  ip=request.headers.get('X-Forwarded-For', request.remote_addr) or "0.0.0.0"
-  ipm=".".join(ip.split('.')[:2])+
-  import time; from datetime import datetime
-  e={"ip":ipm,"ip_full":ip,"path":request.path,"ts":time.time(),"time_str":datetime.now().strftime("%H:%M:%S"),"device":"Mobile","loc":"SA"}
-  c=f"{request.path} {request.args} {request.headers.get('User-Agent','')}".lower()
-  atk=None
-  if "' or" in c or "or 1=1" in c: atk="SQLi"
-  elif "<script" in c: atk="XSS"
-  elif "../" in c: atk="Traversal"
-  elif "bot" in c or "curl" in c: atk="Bot"
-  if atk: MALICIOUS.append({"ip":ipm,"reason":atk,"loc":"SA","time":e["time_str"],"type":atk,"ts":e["ts"]})
-  else: VISITS.append(e)
- except: pass
-@app.route('/api/security-logs')
-def _sec_logs():
- import time; from datetime import datetime
- now=time.time(); hours=[]; vh=[]; ah=[]
- for i in range(6):
-  s=now-(5-i)*14400; ee=s+14400; hours.append(datetime.fromtimestamp(s).strftime("%Hh")); vh.append(len([x for x in VISITS if s <= x["ts"] < ee])); ah.append(len([x for x in MALICIOUS if s <= x["ts"] < ee]))
- uniq=len(set(v["ip_full"] for v in VISITS)); at=Counter(m["type"] for m in MALICIOUS)
- return {"total": len(VISITS)+len(MALICIOUS), "blocked": len(MALICIOUS), "uniq": uniq, "bots": 0, "hours": hours, "visits": vh, "attacks": ah, "attackTypes": dict(at) if at else {"Clean":1}, "malicious": list(MALICIOUS)[-10:][::-1], "legit": [{"ip": v["ip"], "page": v["path"][:30], "device": v["device"], "time": v["time_str"]} for v in list(VISITS)[-10:][::-1]]}
-@app.route('/siem')
-def _siem():
- return render_template('siem_globe.html')
-# === END SIEM ===
-
-# SECURE: Secret from env only, no fallback in code
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
-if not app.config['SECRET_KEY']:
-    app.config['SECRET_KEY'] = os.urandom(24).hex()  # random if not set, not leaked
-
-# SECURE: MUST be in Render Env Vars - no hardcoded defaults
-APP_ID = os.environ.get("ADZUNA_ID")
-APP_KEY = os.environ.get("ADZUNA_KEY")
-
-# Fail fast if keys missing - prevents running with leaked keys
-if not APP_ID or not APP_KEY:
-    logging.warning("ADZUNA keys missing from environment - job fetch will fail, set ADZUNA_ID and ADZUNA_KEY in Render")
-
-logging.basicConfig(filename="waf.log", level=logging.WARNING, format='%(asctime)s - %(message)s')
+    try:
+        if request.path.startswith('/api/security-logs'):
+            return
+        if request.path.startswith('/static'):
+            return
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr) or "0.0.0.0"
+        ip = ip.split(',')[0].strip() # take first if multiple
+        ipm = ip # FULL IP - NOT MASKED
+        e = {"ip": ipm, "ip_full": ip, "path": request.path, "ts": time.time(), "time_str": datetime.now().strftime("%H:%M:%S"), "device": "Mobile", "loc": "SA"}
+        c = f"{request.path} {request.args} {request.headers.get('User-Agent','')}".lower()
+        atk = None
+        if "' or" in c or "or 1=1" in c:
+            atk = "SQLi"
+        elif "<script" in c:
+            atk = "XSS"
+        elif "../" in c:
+            atk = "Traversal"
+        elif "bot" in c or "curl" in c:
+            atk = "Bot"
+        if atk:
+            MALICIOUS.append({"ip": ipm, "reason": atk, "loc": "SA", "time": e["time_str"], "type": atk, "ts": e["ts"]})
+        else:
+            VISITS.append(e)
+    except:
+        pass
 
 def is_traversal_attack(value):
     if not value: return False
@@ -255,4 +238,3 @@ def bot_preview():
         return html
     except Exception as e:
         return f"Error {e}"
-
