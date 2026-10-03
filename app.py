@@ -4,7 +4,8 @@ from datetime import datetime
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 load_dotenv()
-
+from siem import siem_bp
+app.register_blueprint(siem_bp)
 app = Flask(__name__)
 # SECURE: Secret from env only, no fallback in code
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
