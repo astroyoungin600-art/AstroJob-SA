@@ -16,7 +16,7 @@ def _log():
   if request.path.startswith('/api/security-logs'): return
   if request.path.startswith('/static'): return
   ip=request.headers.get('X-Forwarded-For', request.remote_addr) or "0.0.0.0"
-  ipm=".".join(ip.split('.')[:2])+".*.*"
+  ipm=".".join(ip.split('.')[:2])+
   import time; from datetime import datetime
   e={"ip":ipm,"ip_full":ip,"path":request.path,"ts":time.time(),"time_str":datetime.now().strftime("%H:%M:%S"),"device":"Mobile","loc":"SA"}
   c=f"{request.path} {request.args} {request.headers.get('User-Agent','')}".lower()

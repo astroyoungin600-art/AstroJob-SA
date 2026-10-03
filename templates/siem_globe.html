@@ -16,8 +16,8 @@ async function load(){
  window.tChart=new Chart(document.getElementById('trafficChart'),{type:'line',data:{labels:d.hours,datasets:[{label:'Visits',data:d.visits,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',tension:0.4},{label:'Attacks',data:d.attacks,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',tension:0.4}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#1f2937'}}}}});
  if(window.aChart)window.aChart.destroy();
  window.aChart=new Chart(document.getElementById('attackChart'),{type:'doughnut',data:{labels:Object.keys(d.attackTypes),datasets:[{data:Object.values(d.attackTypes),backgroundColor:['#22c55e','#ef4444','#f59e0b','#3b82f6','#8b5cf6']}]},options:{plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',boxWidth:12}}}}});
- document.getElementById('malTable').innerHTML='<tr><th>IP Masked</th><th>Reason</th><th>Time</th></tr>'+d.malicious.map(m=>`<tr><td>${m.ip}</td><td class="red">${m.reason}</td><td>${m.time}</td></tr>`).join('');
- document.getElementById('goodTable').innerHTML='<tr><th>IP Masked</th><th>Page</th><th>Time</th></tr>'+d.legit.map(g=>`<tr><td>${g.ip}</td><td>${g.page}</td><td>${g.time}</td></tr>`).join('');
+ document.getElementById('malTable').innerHTML='<tr><th>Full IP</th><th>Reason</th><th>Time</th></tr>'+d.malicious.map(m=>`<tr><td>${m.ip}</td><td class="red">${m.reason}</td><td>${m.time}</td></tr>`).join('');
+ document.getElementById('goodTable').innerHTML='<tr><th>Full IP</th><th>Page</th><th>Time</th></tr>'+d.legit.map(g=>`<tr><td>${g.ip}</td><td>${g.page}</td><td>${g.time}</td></tr>`).join('');
 }
 load(); setInterval(load,3000);
 </script></body></html>
