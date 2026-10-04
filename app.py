@@ -122,6 +122,7 @@ function installPWA(){if(deferredPrompt){deferredPrompt.prompt();}}
 </body></html>
 """
 
+
 @app.route("/", methods=["GET","POST"])
 def home():
     raw_q=(request.form.get("q","Driver") if request.method=="POST" else request.args.get("q","Driver")).strip()
@@ -130,7 +131,7 @@ def home():
     qq=sanitize(raw_q,40) or "Driver"
     loc_q=sanitize(raw_loc,40) or "South Africa"
     jobs=get_jobs(qq,loc_q)
-    share_text="Astro Job SA - Made by Mthembisi - https://astrojobsa.onrender.com"
+    share_text="Astro Job SA - Made by Mthembisi - https://astrojob-sa.onrender.com"
     return render_template("index.html",jobs=jobs,qq=qq,loc=loc_q,share_text=share_text)
 
 @app.after_request
@@ -147,18 +148,21 @@ def ads():
 def health(): return {"status":"ok","by":"Mthembisi"}
 
 @app.route("/cv")
-def cv(): 
+def cv():
     try: return render_template("cv.html")
     except: return "CV Maker - Coming soon <a href='/'>Home</a>"
 
 @app.route("/post-job")
+@app.route("/post_job")
+@app.route("/post-a-job")
 def post_job():
-    try: return render_template("post-job.html")
-    except: return "Post Job - WhatsApp 0812602918 <a href='/'>Home</a>"
-
-if __name__=="__main__":
-    app.run(host="0.0.0.0",port=8080,debug=False)
-
+    try:
+        return render_template("post_job.html")
+    except:
+        try:
+            return render_template("post-job.html")
+        except:
+            return "Post Job - WhatsApp 0812602918 <a href='/'>Home</a>"
 
 @app.route('/jobs/<slug>')
 def high_cpc_job(slug):
@@ -170,15 +174,20 @@ def high_cpc_job(slug):
         "driver-jobs-gauteng": "Driver jobs Gauteng - Code 10, 14, delivery driver."
     }
     text = seo_content.get(slug, f"Find {slug.replace('-',' ')} in South Africa 2026")
-    return render_template('job_seo.html', slug=slug, content=text, title=slug.replace('-',' ').title())
+    try:
+        return render_template('job_seo.html', slug=slug, content=text, title=slug.replace('-',' ').title())
+    except:
+        return f"<h1>{slug}</h1><p>{text}</p><a href='/'>Back</a>"
 
 @app.route('/privacy')
 def privacy_page():
     try:
         return open('templates/privacy.html').read()
     except:
-        return open('privacy.html').read()
+        try:
+            return open('privacy.html').read()
+        except:
+            return "Privacy - Astro Job SA <a href='/'>Home</a>"
 
-@app.route('/ads.txt')
-def ads_txt():
-    return open('ads.txt').read(), 200, {'Content-Type': 'text/plain'}
+if __name__=="__main__":
+    app.run(host="0.0.0.0",port=8080,debug=False)
