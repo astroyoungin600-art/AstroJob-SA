@@ -1,4 +1,14 @@
 <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>ASTRO SIEM LIVE</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>body{background:#0a0e1a;color:#e2e8f0;font-family:system-ui;padding:12px;margin:0} .top{display:flex;gap:10px;margin:10px 0} .kpi{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:12px;flex:1;text-align:center} .kpi b{font-size:20px;display:block;color:#22c55e} .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:12px;margin:12px 0} table{width:100%;font-size:13px;border-collapse:collapse} th{color:#64748b;text-align:left;padding:6px} td{padding:8px 6px;border-top:1px solid #1f2937} .green{color:#22c55e} .red{color:#ef4444}</style></head><body>
+
+<!-- Jobsa Channel -->
+<div style="background:#25D366;color:white;text-align:center;padding:12px;font-family:Arial;position:relative;z-index:9999">
+  🔥 <b>500+ Jobs Daily on WhatsApp</b>
+  <a href="https://whatsapp.com/channel/0029VbDh9dGK5cDEn5Epcw0F" 
+     style="background:white;color:#25D366;padding:6px 14px;border-radius:20px;text-decoration:none;font-weight:bold;margin-left:8px;display:inline-block">
+     📲 Follow Jobsa🇿🇦
+  </a>
+</div>
+
 <h2 style="margin:0">🛡️ ASTRO SIEM - LIVE</h2><p style="color:#94a3b8;font-size:12px">Real visitors vs threats • Soweto, SA</p>
 <div class="top"><div class="kpi"><b id="totalVisits">0</b>Total</div><div class="kpi"><b id="malBlocked" style="color:#ef4444">0</b>Blocked</div><div class="kpi"><b id="uniqVis">0</b>Unique</div><div class="kpi"><b id="botHits">0</b>Bots</div></div>
 <div class="card"><div style="display:flex;gap:12px;font-size:12px;margin-bottom:8px"><span class="green">■ Visits</span><span class="red">■ Attacks</span></div><canvas id="trafficChart" height="120"></canvas></div>
@@ -20,4 +30,7 @@ async function load(){
  document.getElementById('goodTable').innerHTML='<tr><th>Full IP</th><th>Page</th><th>Time</th></tr>'+d.legit.map(g=>`<tr><td>${g.ip}</td><td>${g.page}</td><td>${g.time}</td></tr>`).join('');
 }
 load(); setInterval(load,3000);
-</script></body></html>
+</script>
+<a href="https://whatsapp.com/channel/0029VbDh9dGK5cDEn5Epcw0F"
+   style="position:fixed;bottom:20px;right:20px;background:#25D366;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3)">💬</a>
+</body></html>
