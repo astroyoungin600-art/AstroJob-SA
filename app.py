@@ -84,7 +84,7 @@ HTML = """<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"
 .jobs{max-width:900px;margin:20px auto;padding:0 12px;display:grid;gap:12px}
 .job{background:#fff;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:4px solid #0a2a8a}
 .coffeeF{position:fixed;bottom:18px;right:14px;z-index:99999;background:#FFDD00;color:#000;padding:12px 20px;border-radius:30px;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,.25);text-decoration:none;border:2px solid #000}
-</style></head><body>
+</style><script>window.ADS_SLOT="1234567890"</script></head><body>
 <div id="astroHeader">
   <div><a href="/" style="text-decoration:none"><b style="font-size:22px;color:#0a2a8a">🚀 Astro Job SA</b><br><small style="color:#00a651;font-weight:800;letter-spacing:2px;font-size:10px">MADE BY MTHEMBISI</small></a></div>
   <div class="btns">
@@ -97,7 +97,15 @@ HTML = """<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"
 <div class="jobs">
 {% for j in jobs %}
 <div class="job"><h3 style="margin:0 0 6px;color:#0a2a8a">{{j.title}}</h3><div style="font-size:12px;color:#64748b">🏢 {{j.company}} • 📍 {{j.location}} • {{j.created}}</div><div style="font-size:13px;margin-top:6px">{{j.desc}}...</div><div style="margin-top:10px"><a href="{{j.url}}" target="_blank" style="background:#0a2a8a;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:800">Apply →</a> <a href="https://wa.me/?text={{share_text}}%20{{j.url}}" target="_blank" style="background:#22c55e;color:#000;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:800">WhatsApp</a></div></div>
+
+{% if loop.index % 3 == 0 %}
+<div style="margin:20px 0; min-height:100px; background:#fff; border-radius:12px; padding:10px">
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2133699761079270" data-ad-slot="2476030872" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
+</div>
+{% endif %}
 {% endfor %}
+
 </div>
 <!-- BUYMEACOFFEE - YOUR ACCOUNT -->
 <a href="https://www.buymeacoffee.com/astrojobsa" target="_blank" class="coffeeF">☕ Buy Me a Coffee</a>
