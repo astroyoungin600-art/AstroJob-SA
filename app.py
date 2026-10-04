@@ -1,6 +1,6 @@
 import os
 ADMIN_PASS = os.getenv("SIEM_PASSWORD", "change-me")
-from flask import Flask, render_template_string, request, render_template, redirect
+from flask import Flask, request, render_template, redirect
 import requests, os, re, logging, time
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -131,7 +131,7 @@ def home():
     loc_q=sanitize(raw_loc,40) or "South Africa"
     jobs=get_jobs(qq,loc_q)
     share_text="Astro Job SA - Made by Mthembisi - https://astrojobsa.onrender.com"
-    return render_template_string(HTML,jobs=jobs,qq=qq,loc=loc_q,share_text=share_text)
+    return render_template("index.html",jobs=jobs,qq=qq,loc=loc_q,share_text=share_text)
 
 @app.after_request
 def secure_headers(r):

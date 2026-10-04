@@ -1,0 +1,11 @@
+# paste, save CTRL+O, CTRL+X
+
+# Clean old files
+rm -rf ~/AstroJobSA/__pycache__ ~/AstroJobSA/app.py.good
+
+# Verify fix
+grep -rn "render_template_string" ~/AstroJobSA/ --include="*.py"
+# Should return NOTHING now
+
+python ~/AstroJobSA/app.py
+# Should say * Running on http://...
