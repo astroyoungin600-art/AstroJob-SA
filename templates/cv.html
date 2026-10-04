@@ -1,10 +1,44 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CV Builder - Astro Job SA</title><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script><style>body{font-family:system-ui;background:#f8fafc;padding:16px;margin:0}.card{background:#fff;padding:20px;border-radius:14px;max-width:750px;margin:0 auto;box-shadow:0 4px 12px rgba(0,0,0,.08);border:1px solid #e2e8f0} .free{border-left:5px solid #22c55e} .pro{border-left:5px solid #f59e0b;background:#fffbeb} .btn{width:100%;padding:14px;border-radius:10px;border:0;font-weight:900;cursor:pointer;font-size:15px} </style></head><body>
-<div class="card free" style="margin-bottom:16px"><h2>📄 Free CV - Basic</h2><p style="color:#475569">Simple 1-page CV. Good for entry jobs.</p><ul style="font-size:14px"><li>✅ Name, Contact, Experience</li><li>✅ PDF Download</li><li>❌ No Pro Templates</li><li>❌ No Cover Letter</li></ul><button class="btn" style="background:#e2e8f0">Download Free CV</button><br><br><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2133699761079270" data-ad-format="auto"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
+<!DOCTYPE html>
+<html><head>
+<title>Free CV Builder - Astro Job SA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script>
+<style>body{font-family:system-ui;max-width:800px;margin:auto;padding:15px;line-height:1.6}input,textarea{width:100%;padding:10px;margin:6px 0;border:1px solid #ddd;border-radius:8px}button{background:#0a2a8a;color:#fff;padding:12px 20px;border:0;border-radius:8px;width:100%;font-weight:700}</style>
+</head><body>
+<header><h1>Free CV Builder - Astro Job SA</h1><p>Create professional CV in 2 mins</p></header>
 
-<div class="card pro"><h2>⭐ CV PRO - R79 Once Off 🔥</h2><p style="color:#92400e"><b>Most Popular</b> - Professional templates that get interviews.</p><ul style="font-size:14px"><li>✅ 5 Premium Templates (Modern, ATS)</li><li>✅ Cover Letter + LinkedIn Summary</li><li>✅ No Watermark, Unlimited Edits</li><li>✅ WhatsApp Support</li></ul>
-<a href="https://wa.me/27812602918?text=Hi%20Mthembisi%2C%20I%20want%20CV%20PRO%20R79%20-%20Astro%20Job%20SA" target="_blank" style="display:block;text-align:center;background:#000;color:#FFDD00;padding:14px;border-radius:10px;text-decoration:none;font-weight:900">💳 Pay R79 via WhatsApp - Get PRO Now</a>
-<p style="text-align:center;font-size:12px;color:#888;margin-top:10px">Contact: +27 81 260 2918 • Instant delivery via WhatsApp</p>
+<!-- AD #1 TOP - High CPC -->
+<div style="margin:15px 0"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2133699761079270" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
+
+<form id="cvForm">
+<input id="name" placeholder="Full Name">
+<input id="email" placeholder="Email">
+<input id="phone" placeholder="Phone +27 81 260 2918">
+<textarea id="exp" placeholder="Work Experience"></textarea>
+<textarea id="edu" placeholder="Education"></textarea>
+<button type="button" onclick="genCV()">Generate CV</button>
+</form>
+
+<!-- AD #2 MIDDLE - BEST EARNER -->
+<div style="margin:20px 0;background:#f8fafc;padding:10px;border-radius:12px"><small style="color:#888">Sponsored</small>
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2133699761079270" data-ad-slot="auto" data-ad-format="fluid" data-ad-layout="in-article"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
+
+<div id="preview" style="border:1px solid #ddd;padding:20px;border-radius:12px;margin-top:20px;white-space:pre-wrap"></div>
+
+<!-- AD #3 BOTTOM -->
+<div style="margin:20px 0"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2133699761079270" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>
+
+<div style="text-align:center;margin-top:10px">
+<p>Need PDF? WhatsApp: +27 81 260 2918 • Instant delivery via WhatsApp</p>
+<a href="/" style="color:#0a2a8a;font-weight:700;text-decoration:none">← Back to Jobs</a>
 </div>
 
-<div style="text-align:center;margin-top:20px"><a href="/" style="color:#0a2a8a;text-decoration:none;font-weight:700">← Back to Jobs</a></div>
+<script>
+function genCV(){
+let n=document.getElementById('name').value;
+let e=document.getElementById('exp').value;
+document.getElementById('preview').innerText=`CV for ${n}\n\nExperience:\n${e}\n\nContact: ${document.getElementById('phone').value}`;
+window.scrollTo(0,document.getElementById('preview').offsetTop);
+}
+</script>
 </body></html>
