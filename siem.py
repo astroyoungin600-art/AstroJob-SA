@@ -3,14 +3,14 @@ from flask import Blueprint, jsonify, render_template, request, session, redirec
 from collections import deque, Counter
 from datetime import datetime
 import requests
-
 siem_bp = Blueprint('siem', __name__)
 THREATS = deque(maxlen=500)
 
-# SECURE - from Render Environment, not hardcoded
+# DEBUG - will show in logs if ENV loaded
 SIEM_USER = os.getenv("SIEM_USER", "admin")
-SIEM_PASS = os.getenv("SIEM_PASSWORD", os.getenv("SIEM_PASS", "change-me-2026"))
-RESET_SECRET = os.getenv("RESET_SECRET", "mthembisi2026")
+SIEM_PASS = os.getenv("SIEM_PASSWORD") or os.getenv("SIEM_PASS") or "Temp1234!"
+RESET_SECRET = os.getenv("RESET_SECRET") or "temp-reset"
+print(f"[SIEM] USER={SIEM_USER} PASS_SET={bool(os.getenv('SIEM_PASSWORD'))} RESET_SET={bool(os.getenv('RESET_SECRET'))}", flush=True)
 
 def get_geo(ip):
     try:
@@ -25,56 +25,28 @@ def get_geo(ip):
 def log_request():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
     path = request.path
-    if path.startswith('/siem') or path.startswith('/api/threats') or path.startswith('/api/security-logs') or path.startswith('/reset'):
+    if path.startswith('/siem') or path.startswith('/api/') or path.startswith('/debug'):
         return
     lat,lng,city = get_geo(ip)
-    is_bad = any(x in path.lower() for x in ['admin','/.env','wp-','.git','phpmyadmin','config','backup','login'])
+    is_bad = any(x in path.lower() for x in ['admin','/.env','wp-','.git','phpmyadmin'])
     THREATS.append({"ip": ip, "lat": lat, "lng": lng, "city": city, "type": "Attack" if is_bad else "Visit", "path": path, "reason": path if is_bad else "Legit", "time": datetime.now().strftime("%H:%M:%S"), "page": path, "time_str": datetime.now().strftime("%H:%M:%S")})
+
+@siem_bp.route('/debug-siem')
+def debug_siem():
+    return f"USER={SIEM_USER} | PASS_EXISTS={bool(SIEM_PASS)} LEN={len(SIEM_PASS)} | RESET_EXISTS={bool(RESET_SECRET)} | ENV_SIEM_PASSWORD={bool(os.getenv('SIEM_PASSWORD'))}"
 
 @siem_bp.route('/siem/login', methods=["GET","POST"])
 def login():
     if request.method == "POST":
-        if request.form.get('username')==SIEM_USER and request.form.get('password')==SIEM_PASS:
+        u = request.form.get('username','').strip()
+        p = request.form.get('password','').strip()
+        print(f"[LOGIN TRY] user={u} pass_len={len(p)} expected_user={SIEM_USER} match={u==SIEM_USER and p==SIEM_PASS}", flush=True)
+        if u==SIEM_USER and p==SIEM_PASS:
             session['siem_auth']=True
-            session.permanent = False
+            session.permanent=True
             return redirect('/siem')
-        return "<h3 style=color:red>Wrong! <a href=/siem/login>Retry</a></h3>"
-    return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif">
-<div style="background:#111827;padding:30px;border-radius:16px;width:320px;text-align:center;border:1px solid #333">
-<h2>SIEM Login</h2>
-<p style="font-size:11px;color:#94a3b8">© 2026 Astro Job SA - Made by Mthembisi</p>
-<form method=POST>
-<input name=username placeholder="Username" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px">
-<input name=password type=password placeholder="••••••••" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px">
-<button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:10px;font-weight:800;margin-top:8px">LOGIN</button>
-</form>
-<p style="margin-top:12px;font-size:11px"><a href="/siem/reset" style="color:#64748b">Forgot password? Reset</a></p>
-</div></body></html>"""
-
-@siem_bp.route('/siem/reset', methods=["GET","POST"])
-def reset():
-    msg=""
-    if request.method=="POST":
-        secret=request.form.get("secret","")
-        new_user=request.form.get("new_user","")
-        new_pass=request.form.get("new_pass","")
-        if secret==RESET_SECRET and new_pass:
-            msg=f"RESET OK - Now go to Render Dashboard > Environment and set: SIEM_USER={new_user} and SIEM_PASSWORD={new_pass} then redeploy. Then login with new password."
-        else:
-            msg="Wrong reset secret"
-    return f"""<html><body style="background:#020617;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif">
-<div style="background:#0f172a;padding:25px;border-radius:15px;width:330px">
-<h3>Password Reset</h3>
-<p style="font-size:11px;color:#94a3b8">© 2026 Astro Job SA - Made by Mthembisi</p>
-<form method=POST>
-<input name=secret type=password placeholder="Reset Secret" required style="width:100%;padding:12px;background:#000;color:#fff;border-radius:8px;border:1px solid #333;margin:6px 0">
-<input name=new_user placeholder="New Username" value="admin" required style="width:100%;padding:12px;background:#000;color:#fff;border-radius:8px;border:1px solid #333;margin:6px 0">
-<input name=new_pass type=password placeholder="New Password" required style="width:100%;padding:12px;background:#000;color:#fff;border-radius:8px;border:1px solid #333;margin:6px 0">
-<button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:bold;margin-top:8px">RESET PASSWORD</button>
-</form>
-<p style="color:#22c55e;font-size:13px;margin-top:12px">{msg}</p>
-<a href="/siem/login" style="color:#94a3b8;font-size:12px">Back to Login</a>
-</div></body></html>"""
+        return f"<h3 style=color:red>Wrong! You typed: {u} / len {len(p)} but expected {SIEM_USER}. <a href=/siem/login>Retry</a> | <a href=/debug-siem>Check ENV</a></h3>"
+    return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:320px;text-align:center;border:1px solid #333"><h2>SIEM Login</h2><p style="font-size:11px;color:#94a3b8">© 2026 Astro Job SA - Made by Mthembisi</p><form method=POST><input name=username placeholder="Username" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder="Password" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800;margin-top:8px">LOGIN</button></form><p style="margin-top:10px;font-size:11px"><a href=/debug-siem style="color:#64748b">Debug ENV</a></p></div></body></html>"""
 
 @siem_bp.route('/siem/logout')
 def logout():
@@ -103,27 +75,4 @@ def security_logs():
     total = len(all_data)
     blocked = len(malicious)
     uniq = len(set([x['ip'] for x in all_data]))
-    return {
-        "total": total,
-        "blocked": blocked,
-        "uniq": uniq,
-        "bots": blocked,
-        "hours": ["5h ago","4h ago","3h ago","2h ago","1h ago","now"],
-        "visits": [len(legit)//6+1]*6,
-        "attacks": [blocked//6+1]*6,
-        "attackTypes": dict(Counter([x.get('path','/') for x in malicious])) or {"Legit": len(legit)},
-        "legit": [{"ip": x['ip'], "page": x['page'], "time": x['time']} for x in legit],
-        "malicious": [{"ip": x['ip'], "reason": x['reason'], "time": x['time']} for x in malicious]
-    }
-
-@siem_bp.route('/manifest.json')
-def manifest():
-    return {
-      "name": "Astro Job SA - Made by Mthembisi",
-      "short_name": "AstroJobSA",
-      "start_url": "/",
-      "display": "standalone",
-      "background_color": "#0a0e1a",
-      "theme_color": "#22c55e",
-      "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", "sizes": "192x192", "type": "image/png"}]
-    }
+    return {"total": total, "blocked": blocked, "uniq": uniq, "bots": blocked, "hours": ["5h ago","4h ago","3h ago","2h ago","1h ago","now"], "visits": [len(legit)//6+1]*6, "attacks": [blocked//6+1]*6, "attackTypes": dict(Counter([x.get('path','/') for x in malicious])) or {"Legit": len(legit)}, "legit": [{"ip": x['ip'], "page": x['page'], "time": x['time']} for x in legit], "malicious": [{"ip": x['ip'], "reason": x['reason'], "time": x['time']} for x in malicious]}
