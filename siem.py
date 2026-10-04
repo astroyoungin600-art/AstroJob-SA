@@ -3,7 +3,6 @@ from flask import Blueprint, jsonify, render_template, request, session, redirec
 from collections import deque, Counter
 from datetime import datetime
 import requests
-from functools import wraps
 import time
 
 siem_bp = Blueprint('siem', __name__)
@@ -30,20 +29,7 @@ def log_request():
         return
     query = request.query_string.decode().lower() if request.query_string else ""
     full = f"{p} {query} {str(request.args).lower()}"
-
-    sigs = {
-        '.env': 'ENV Leak',
-        '.git': 'Git Leak',
-        'wp-': 'WP Scan',
-        'phpmyadmin': 'phpMyAdmin',
-        '<script': 'XSS <script>',
-        'onerror': 'XSS onerror',
-        'img src': 'XSS img',
-        '{{': 'SSTI',
-        'or 1=1': 'SQLi',
-        'union select': 'SQLi UNION',
-        '../': 'LFI'
-    }
+    sigs = {'.env': 'ENV Leak','.git': 'Git Leak','wp-': 'WP Scan','phpmyadmin': 'phpMyAdmin','<script': 'XSS','onerror': 'XSS onerror','img src': 'XSS img','{{': 'SSTI','or 1=1': 'SQLi','union select': 'SQLi UNION','../': 'LFI'}
     is_bad = False
     reason = "Legit Visit"
     for k,v in sigs.items():
@@ -51,7 +37,6 @@ def log_request():
             is_bad = True
             reason = v
             break
-
     lat,lng,city = get_geo(ip)
     THREATS.append({"ip": ip, "lat": lat, "lng": lng, "city": city, "type": "Attack" if is_bad else "Visit", "path": request.path + (f"?{request.query_string.decode()}" if request.query_string else ""), "reason": reason, "time": datetime.now().strftime("%H:%M:%S"), "page": request.path, "time_str": datetime.now().strftime("%H:%M:%S")})
 
@@ -65,27 +50,32 @@ def login():
         p = request.form.get('password','').strip()
         if u==SIEM_USER and p==SIEM_PASS:
             FAILED.pop(ip, None)
-            session['siem_auth']=True
-            session.permanent=True
+            session.permanent = True
+            session['siem_auth'] = True
+            session['siem_user'] = u
             return redirect('/siem')
         FAILED[ip] = {'count': FAILED.get(ip, {}).get('count',0)+1, 'time': time.time()}
         return "<h3 style=color:red>Wrong username or password. <a href=/siem/login>Retry</a></h3>", 401
-    return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:320px;text-align:center;border:1px solid #333"><h2>SIEM Login</h2><p style="font-size:11px;color:#94a3b8">© 2026 Astro Job SA - Made by Mthembisi</p><form method=POST><input name=username placeholder="Username" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder="Password" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800">LOGIN</button></form></div></body></html>"""
+    return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:320px;text-align:center;border:1px solid #333"><h2>SIEM Login</h2><p style="font-size:11px;color:#94a3b8">7-day login - © 2026 Astro Job SA - Made by Mthembisi</p><form method=POST><input name=username placeholder="Username" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder="Password" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800">LOGIN - Stay 7 Days</button></form></div></body></html>"""
 
 @siem_bp.route('/siem/logout')
 def logout():
     session.pop('siem_auth',None)
+    session.pop('siem_user',None)
     return redirect('/siem/login')
+
 @siem_bp.route('/siem')
 def dashboard():
     if not session.get('siem_auth'):
         return redirect('/siem/login')
     return render_template('siem_globe.html')
+
 @siem_bp.route('/api/threats')
 def threats_api():
     if not session.get('siem_auth'):
         return jsonify({"error":"login"}), 401
     return jsonify(list(THREATS))
+
 @siem_bp.route('/api/security-logs')
 def security_logs():
     if not session.get('siem_auth'):
