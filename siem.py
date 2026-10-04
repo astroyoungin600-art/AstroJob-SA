@@ -5,12 +5,10 @@ from datetime import datetime
 import requests
 siem_bp = Blueprint('siem', __name__)
 THREATS = deque(maxlen=500)
-
-# DEBUG - will show in logs if ENV loaded
-SIEM_USER = os.getenv("SIEM_USER", "admin")
-SIEM_PASS = os.getenv("SIEM_PASSWORD") or os.getenv("SIEM_PASS") or "Temp1234!"
-RESET_SECRET = os.getenv("RESET_SECRET") or "temp-reset"
-print(f"[SIEM] USER={SIEM_USER} PASS_SET={bool(os.getenv('SIEM_PASSWORD'))} RESET_SET={bool(os.getenv('RESET_SECRET'))}", flush=True)
+SIEM_USER = (os.getenv("SIEM_USER") or "admin").strip()
+SIEM_PASS = (os.getenv("SIEM_PASSWORD") or os.getenv("SIEM_PASS") or "Temp1234!").strip()
+RESET_SECRET = (os.getenv("RESET_SECRET") or "temp-reset").strip()
+print(f"[SIEM] USER={SIEM_USER} PASS_LEN={len(SIEM_PASS)} PASS_FIRST3={SIEM_PASS[:3]}***", flush=True)
 
 def get_geo(ip):
     try:
@@ -33,38 +31,34 @@ def log_request():
 
 @siem_bp.route('/debug-siem')
 def debug_siem():
-    return f"USER={SIEM_USER} | PASS_EXISTS={bool(SIEM_PASS)} LEN={len(SIEM_PASS)} | RESET_EXISTS={bool(RESET_SECRET)} | ENV_SIEM_PASSWORD={bool(os.getenv('SIEM_PASSWORD'))}"
+    return f"USER={SIEM_USER} | PASS_LEN={len(SIEM_PASS)} SHOULD_BE_8_or_15 | FIRST_3={SIEM_PASS[:3]}***"
 
 @siem_bp.route('/siem/login', methods=["GET","POST"])
 def login():
     if request.method == "POST":
         u = request.form.get('username','').strip()
         p = request.form.get('password','').strip()
-        print(f"[LOGIN TRY] user={u} pass_len={len(p)} expected_user={SIEM_USER} match={u==SIEM_USER and p==SIEM_PASS}", flush=True)
         if u==SIEM_USER and p==SIEM_PASS:
             session['siem_auth']=True
             session.permanent=True
             return redirect('/siem')
-        return f"<h3 style=color:red>Wrong! You typed: {u} / len {len(p)} but expected {SIEM_USER}. <a href=/siem/login>Retry</a> | <a href=/debug-siem>Check ENV</a></h3>"
-    return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:320px;text-align:center;border:1px solid #333"><h2>SIEM Login</h2><p style="font-size:11px;color:#94a3b8">© 2026 Astro Job SA - Made by Mthembisi</p><form method=POST><input name=username placeholder="Username" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder="Password" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800;margin-top:8px">LOGIN</button></form><p style="margin-top:10px;font-size:11px"><a href=/debug-siem style="color:#64748b">Debug ENV</a></p></div></body></html>"""
+        return f"<h3 style=color:red>Wrong! You typed len {len(p)} but server has len {len(SIEM_PASS)}. Expected user {SIEM_USER}. Your pass starts {p[:2]}*** server starts {SIEM_PASS[:2]}*** <a href=/siem/login>Retry</a></h3>"
+    return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:320px;text-align:center;border:1px solid #333"><h2>SIEM Login</h2><p style="font-size:11px;color:#94a3b8">© 2026 Astro Job SA - Made by Mthembisi</p><form method=POST><input name=username placeholder="Username" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder="Password" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800">LOGIN</button></form></div></body></html>"""
 
 @siem_bp.route('/siem/logout')
 def logout():
     session.pop('siem_auth',None)
     return redirect('/siem/login')
-
 @siem_bp.route('/siem')
 def dashboard():
     if not session.get('siem_auth'):
         return redirect('/siem/login')
     return render_template('siem_globe.html')
-
 @siem_bp.route('/api/threats')
 def threats_api():
     if not session.get('siem_auth'):
         return jsonify({"error":"login"}), 401
     return jsonify(list(THREATS))
-
 @siem_bp.route('/api/security-logs')
 def security_logs():
     if not session.get('siem_auth'):
@@ -72,7 +66,5 @@ def security_logs():
     all_data = list(THREATS)
     legit = [x for x in all_data if x['type']=="Visit"][-20:][::-1]
     malicious = [x for x in all_data if x['type']=="Attack"][-20:][::-1]
-    total = len(all_data)
-    blocked = len(malicious)
-    uniq = len(set([x['ip'] for x in all_data]))
+    total = len(all_data); blocked = len(malicious); uniq = len(set([x['ip'] for x in all_data]))
     return {"total": total, "blocked": blocked, "uniq": uniq, "bots": blocked, "hours": ["5h ago","4h ago","3h ago","2h ago","1h ago","now"], "visits": [len(legit)//6+1]*6, "attacks": [blocked//6+1]*6, "attackTypes": dict(Counter([x.get('path','/') for x in malicious])) or {"Legit": len(legit)}, "legit": [{"ip": x['ip'], "page": x['page'], "time": x['time']} for x in legit], "malicious": [{"ip": x['ip'], "reason": x['reason'], "time": x['time']} for x in malicious]}
