@@ -31,7 +31,8 @@ def home():
 @app.route("/ads.txt")
 def ads_txt(): return "google.com, pub-2133699761079270, DIRECT, f08c47fec0942fa0",200,{'Content-Type':'text/plain'}
 @app.route("/robots.txt")
-def robots(): return "User-agent: *\nDisallow: /siem\nDisallow: /api/\nDisallow: /health\nAllow: /\nSitemap: https://astrojob-sa.onrender.com/sitemap.xml\n",200,{'Content-Type':'text/plain'}
+def robots():
+    return "User-agent: *\nAllow: /\nSitemap: https://astrojob-sa.onrender.com/sitemap.xml\n",200,{'Content-Type':'text/plain'}
 @app.route("/sitemap.xml")
 def sitemap(): return Response('<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://astrojob-sa.onrender.com/</loc></url></urlset>', mimetype='application/xml')
 @app.route("/health")
