@@ -100,7 +100,7 @@ HTML = """<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"
 {% endfor %}
 </div>
 <!-- BUYMEACOFFEE - YOUR ACCOUNT -->
-<a href="https://www.buymeacoffee.com/mthembisi" target="_blank" class="coffeeF">☕ Buy Me a Coffee</a>
+<a href="https://www.buymeacoffee.com/astrojobsa" target="_blank" class="coffeeF">☕ Buy Me a Coffee</a>
 </body></html>
 """
 
