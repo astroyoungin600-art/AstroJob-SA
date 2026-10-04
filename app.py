@@ -86,7 +86,7 @@ HTML = """<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"
 .jobs{max-width:900px;margin:20px auto;padding:0 12px;display:grid;gap:12px}
 .job{background:#fff;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:4px solid #0a2a8a}
 .coffeeF{position:fixed;bottom:18px;right:14px;z-index:99999;background:#FFDD00;color:#000;padding:12px 20px;border-radius:30px;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,.25);text-decoration:none;border:2px solid #000}
-</style><script>window.ADS_SLOT="1234567890"</script></head><body>
+</style><script>window.ADS_SLOT="1234567890"</script><link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#0f172a"><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
 <div id="astroHeader">
   <div><a href="/" style="text-decoration:none"><b style="font-size:22px;color:#0a2a8a">🚀 Astro Job SA</b><br><small style="color:#00a651;font-weight:800;letter-spacing:2px;font-size:10px">MADE BY MTHEMBISI</small></a></div>
   <div class="btns">
@@ -111,6 +111,14 @@ HTML = """<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"
 </div>
 <!-- BUYMEACOFFEE - YOUR ACCOUNT -->
 <a href="https://www.buymeacoffee.com/astrojobsa" target="_blank" class="coffeeF">☕ Buy Me a Coffee</a>
+
+<script>
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();deferredPrompt=e;document.getElementById('pwaBtn').style.display='block';});
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();}}
+</script>
+<button id="pwaBtn" onclick="installPWA()" style="display:none;position:fixed;bottom:20px;right:20px;background:#22c55e;color:#000;padding:12px 18px;border-radius:30px;border:none;font-weight:bold;z-index:999">Add to Home Screen</button>
+<div style="text-align:center;padding:18px;background:#0f172a;color:#94a3b8;font-size:12px;margin-top:30px">© 2026 Astro Job SA - Made by Mthembisi | <a href="/privacy" style="color:#e2e8f0">Privacy</a> | <a href="/reset-password" style="color:#e2e8f0">Reset Password</a></div>
 </body></html>
 """
 
