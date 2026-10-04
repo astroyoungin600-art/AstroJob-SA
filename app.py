@@ -1,3 +1,5 @@
+import os
+ADMIN_PASS = os.getenv("SIEM_PASSWORD", "change-me")
 from flask import Flask, render_template_string, request, render_template, redirect
 import requests, os, re, logging, time
 from datetime import timedelta
