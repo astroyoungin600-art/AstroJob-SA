@@ -29,7 +29,8 @@ def log_request():
     if path.startswith('/siem') or path.startswith('/api/') or path.startswith('/debug'):
         return
     lat,lng,city = get_geo(ip)
-    is_bad = any(x in path.lower() for x in ['admin','/.env','wp-','.git','phpmyadmin','sitemap'])
+    full = (path + str(request.query_string) + str(request.args)).lower()
+    is_bad = any(x in full for x in ['admin','/.env','wp-','.git','phpmyadmin','sitemap','<script','{{','%7b%7b','or 1=1','union select','../'])
     THREATS.append({"ip": ip, "lat": lat, "lng": lng, "city": city, "type": "Attack" if is_bad else "Visit", "path": path, "reason": path if is_bad else "Legit", "time": datetime.now().strftime("%H:%M:%S"), "page": path, "time_str": datetime.now().strftime("%H:%M:%S")})
 
 @siem_bp.route('/siem/login', methods=["GET","POST"])
