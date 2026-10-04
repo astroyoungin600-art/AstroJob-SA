@@ -3,12 +3,15 @@ from flask import Blueprint, jsonify, render_template, request, session, redirec
 from collections import deque, Counter
 from datetime import datetime
 import requests
+from functools import wraps
+import time
+
 siem_bp = Blueprint('siem', __name__)
 THREATS = deque(maxlen=500)
+FAILED = {} # rate limit
+
 SIEM_USER = (os.getenv("SIEM_USER") or "admin").strip()
-SIEM_PASS = (os.getenv("SIEM_PASSWORD") or os.getenv("SIEM_PASS") or "Temp1234!").strip()
-RESET_SECRET = (os.getenv("RESET_SECRET") or "temp-reset").strip()
-print(f"[SIEM] USER={SIEM_USER} PASS_LEN={len(SIEM_PASS)} PASS_FIRST3={SIEM_PASS[:3]}***", flush=True)
+SIEM_PASS = (os.getenv("SIEM_PASSWORD") or os.getenv("SIEM_PASS") or "change-me").strip()
 
 def get_geo(ip):
     try:
@@ -26,23 +29,27 @@ def log_request():
     if path.startswith('/siem') or path.startswith('/api/') or path.startswith('/debug'):
         return
     lat,lng,city = get_geo(ip)
-    is_bad = any(x in path.lower() for x in ['admin','/.env','wp-','.git','phpmyadmin'])
+    is_bad = any(x in path.lower() for x in ['admin','/.env','wp-','.git','phpmyadmin','sitemap'])
     THREATS.append({"ip": ip, "lat": lat, "lng": lng, "city": city, "type": "Attack" if is_bad else "Visit", "path": path, "reason": path if is_bad else "Legit", "time": datetime.now().strftime("%H:%M:%S"), "page": path, "time_str": datetime.now().strftime("%H:%M:%S")})
-
-@siem_bp.route('/debug-siem')
-def debug_siem():
-    return f"USER={SIEM_USER} | PASS_LEN={len(SIEM_PASS)} SHOULD_BE_8_or_15 | FIRST_3={SIEM_PASS[:3]}***"
 
 @siem_bp.route('/siem/login', methods=["GET","POST"])
 def login():
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    # Rate limit - block after 5 fails
+    if FAILED.get(ip, {}).get('count',0) >= 5 and time.time() - FAILED[ip]['time'] < 300:
+        return "<h3>Too many attempts. Try again in 5 minutes.</h3>", 429
     if request.method == "POST":
         u = request.form.get('username','').strip()
         p = request.form.get('password','').strip()
         if u==SIEM_USER and p==SIEM_PASS:
+            FAILED.pop(ip, None)
             session['siem_auth']=True
             session.permanent=True
             return redirect('/siem')
-        return f"<h3 style=color:red>Wrong! You typed len {len(p)} but server has len {len(SIEM_PASS)}. Expected user {SIEM_USER}. Your pass starts {p[:2]}*** server starts {SIEM_PASS[:2]}*** <a href=/siem/login>Retry</a></h3>"
+        # Log failed
+        FAILED[ip] = {'count': FAILED.get(ip, {}).get('count',0)+1, 'time': time.time()}
+        # SECURE - no leak
+        return "<h3 style=color:red>Wrong username or password. <a href=/siem/login>Retry</a></h3>", 401
     return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:320px;text-align:center;border:1px solid #333"><h2>SIEM Login</h2><p style="font-size:11px;color:#94a3b8">© 2026 Astro Job SA - Made by Mthembisi</p><form method=POST><input name=username placeholder="Username" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder="Password" required style="width:100%;padding:12px;margin:6px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800">LOGIN</button></form></div></body></html>"""
 
 @siem_bp.route('/siem/logout')
