@@ -158,3 +158,25 @@ def post_job():
 
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=8080,debug=False)
+
+@app.route('/jobs/<slug>')
+def high_cpc_job(slug):
+    # High CPC keywords for AdSense
+    seo_content = {
+        "software-engineer-jobs-south-africa": "Software Engineer jobs in South Africa pay R45k-R85k. Find Java, Python, C# roles in JHB, CPT, remote...",
+        "nursing-jobs-gauteng": "Nursing jobs Gauteng 2026 - Registered Nurse, ICU, Private hospitals...",
+        "remote-it-jobs": "Remote IT jobs SA - Work from home developer, support, cloud...",
+    }
+    return render_template('job_seo.html', slug=slug, content=seo_content.get(slug, f"Find {slug.replace('-',' ')} in South Africa"), title=slug.replace('-',' ').title())
+
+@app.route('/jobs/<slug>')
+def high_cpc_job(slug):
+    seo_content = {
+        "software-engineer-jobs-south-africa": "Software Engineer jobs in South Africa pay R45k-R85k. Find Java, Python, C# roles in JHB, CPT, remote. Salary guide + interview tips.",
+        "nursing-jobs-gauteng": "Nursing jobs Gauteng 2026 - Registered Nurse, ICU, Private hospitals. R20k-R45k. SANC registered.",
+        "remote-it-jobs": "Remote IT jobs SA - Work from home developer, support, cloud. International clients paying in USD.",
+        "finance-manager-jobs": "Finance Manager jobs SA - CA(SA), CIMA, R60k-R120k. JHB Sandton, CPT.",
+        "driver-jobs-gauteng": "Driver jobs Gauteng - Code 10, Code 14, delivery driver. Immediate hiring."
+    }
+    text = seo_content.get(slug, f"Find {slug.replace('-',' ')} in South Africa 2026")
+    return render_template('job_seo.html', slug=slug, content=text, title=slug.replace('-',' ').title())
