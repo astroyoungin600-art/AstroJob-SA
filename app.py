@@ -171,3 +171,14 @@ def high_cpc_job(slug):
     }
     text = seo_content.get(slug, f"Find {slug.replace('-',' ')} in South Africa 2026")
     return render_template('job_seo.html', slug=slug, content=text, title=slug.replace('-',' ').title())
+
+@app.route('/privacy')
+def privacy_page():
+    try:
+        return open('templates/privacy.html').read()
+    except:
+        return open('privacy.html').read()
+
+@app.route('/ads.txt')
+def ads_txt():
+    return open('ads.txt').read(), 200, {'Content-Type': 'text/plain'}
