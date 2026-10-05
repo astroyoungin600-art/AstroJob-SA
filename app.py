@@ -101,3 +101,4 @@ def post_job(): return render_template("post_job.html")
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
+# v1791236657 fix apply redirect
