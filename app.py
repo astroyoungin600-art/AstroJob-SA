@@ -104,3 +104,4 @@ def apply_external(slug):
     return redirect(f"https://www.adzuna.co.za/jobs?what={s.split('-')[0]}",302)
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
+# rebuild Mon Oct  5 23:30:16 SAST 2026
