@@ -1,107 +1,84 @@
 from flask import Flask, request, render_template, Response, redirect
-from datetime import timedelta
-import re, random, os
+import re, random, os, time
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "astro-job-sa-2026-fixed-7day-random-x9k2m4p7-no-phone")
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = True
-app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.secret_key = os.getenv("SECRET_KEY", "astro-2026-final")
 try:
     from siem import siem_bp
     app.register_blueprint(siem_bp)
 except: pass
 
-def sanitize(s,n): return re.sub(r'[^a-zA-Z0-9 \-]', '', s)[:n] if s else ""
 ADZUNA_ID = os.getenv("ADZUNA_ID", "REDACTED")
 ADZUNA_KEY = os.getenv("ADZUNA_KEY", "REDACTED")
-DB_CACHE = {"jobs": [], "time": 0}
+CACHE = {"jobs": [], "time": 0}
 PROVINCES = ["Eastern Cape","Free State","Gauteng","KwaZulu-Natal","Limpopo","Mpumalanga","North West","Northern Cape","Western Cape"]
-PROVINCE_MAP = {
- "Gauteng": ["gauteng","johannesburg","jhb","pretoria","pta","centurion","soweto","sandton","midrand","ekurhuleni"],
- "Western Cape": ["western cape","cape town","cpt","stellenbosch","paarl","george"],
- "KwaZulu-Natal": ["kwazulu","kzn","durban","pietermaritzburg"],
+MAP = {
+ "Gauteng": ["gauteng","johannesburg","pretoria","centurion","soweto","sandton","midrand"],
+ "Western Cape": ["western cape","cape town","stellenbosch","paarl"],
+ "KwaZulu-Natal": ["kwazulu","kzn","durban"],
  "Eastern Cape": ["eastern cape","port elizabeth","gqeberha","east london"],
  "Free State": ["free state","bloemfontein"],
  "Limpopo": ["limpopo","polokwane"],
- "Mpumalanga": ["mpumalanga","nelspruit","witbank"],
- "North West": ["north west","rustenburg","mahikeng"],
+ "Mpumalanga": ["mpumalanga","nelspruit"],
+ "North West": ["north west","rustenburg"],
  "Northern Cape": ["northern cape","kimberley"],
 }
 
-def fetch_adzuna(q, loc):
-    import requests, time
-    if time.time() - DB_CACHE["time"] < 600 and DB_CACHE["jobs"]:
-        return DB_CACHE["jobs"]
+def fetch(q, loc):
+    import requests
+    # cache 10 min
+    if time.time() - CACHE["time"] < 600 and CACHE["jobs"] and not q and not loc:
+        return CACHE["jobs"]
     try:
-        what = q if q else ""
-        where = loc if loc else "South Africa"
-        url = f"https://api.adzuna.com/v1/api/jobs/za/search/1?app_id={ADZUNA_ID}&app_key={ADZUNA_KEY}&results_per_page=50&what={what}&where={where}&sort_by=date"
-        r = requests.get(url, timeout=10).json()
-        jobs = r.get("results", [])
-        DB_CACHE["jobs"] = jobs
-        DB_CACHE["time"] = time.time()
-        return jobs
-    except:
-        return DB_CACHE["jobs"] or []
+        what = q or ""
+        where = loc if loc and loc.lower()!="all south africa" else "South Africa"
+        url = f"https://api.adzuna.com/v1/api/jobs/za/search/1?app_id={ADZUNA_ID}&app_key={ADZUNA_KEY}&results_per_page=50&what={what}&where={where}"
+        print(f"FETCH Adzuna what={what} where={where}")
+        j = requests.get(url, timeout=12).json().get("results", [])
+        if not q and not loc:
+            CACHE["jobs"]=j
+            CACHE["time"]=time.time()
+        return j
+    except Exception as e:
+        print("Adzuna error", e)
+        return CACHE["jobs"] or []
 
 def get_jobs(q, loc):
-    raw = fetch_adzuna(q, loc)
-    ql = (q or "").lower().strip()
-    q_words = [w for w in ql.split() if len(w)>2]
-    locl = (loc or "").lower().strip()
-    loc_keywords = PROVINCE_MAP.get(loc, [locl]) if loc else []
-    strict=[]
-    for j in raw:
-        title = j.get("title","")
-        company = j.get("company",{}).get("display_name","")
-        location = j.get("location",{}).get("display_name","South Africa")
-        desc = j.get("description","")
-        redirect_url = j.get("redirect_url","")
-        # location filter
+    raw = fetch(q, loc)
+    jobs=[]
+    locl=(loc or "").lower()
+    # ONLY filter by location, NOT by q (Adzuna already did q)
+    for r in raw:
+        title=r.get("title","")
+        comp=r.get("company",{}).get("display_name","")
+        place=r.get("location",{}).get("display_name","South Africa")
+        desc=r.get("description","")[:150]
+        url=r.get("redirect_url","")
         if locl and locl!="all south africa":
-            if locl not in location.lower() and not any(k in location.lower() for k in loc_keywords):
-                continue
-        # search filter - strict
-        if ql:
-            if ql not in title.lower() and ql not in desc.lower():
-                # try any word
-                if not any(w in title.lower() or w in desc.lower() for w in q_words):
+            keys=MAP.get(loc, [locl])
+            if locl not in place.lower() and not any(k in place.lower() for k in keys):
+                # if Adzuna where is loose, skip non-matching province
+                if loc.lower()!="all south africa":
                     continue
-        slug = re.sub(r'[^a-z0-9]+','-', title.lower()).strip('-') + "-" + re.sub(r'[^a-z0-9]+','-', company.lower()).strip('-')
-        strict.append({"title": title,"company": company,"location": location,"url": redirect_url,"slug": slug,"desc": desc[:150]})
-    if strict:
-        random.shuffle(strict)
-        return strict[:18]
-    # lenient fallback - ignore location if too strict, show what we have
-    fallback=[]
-    for j in raw[:30]:
-        title = j.get("title","")
-        company = j.get("company",{}).get("display_name","")
-        location = j.get("location",{}).get("display_name","South Africa")
-        desc = j.get("description","")
-        redirect_url = j.get("redirect_url","")
-        slug = re.sub(r'[^a-z0-9]+','-', title.lower()).strip('-')
-        fallback.append({"title": title,"company": company,"location": location,"url": redirect_url,"slug": slug,"desc": desc[:150]})
-    if fallback:
-        return fallback[:18]
-    # ultimate local DB fallback
-    DB=[("Driver Code 14 - JHB R25k","Unitrans","Johannesburg"),("Driver Code 10 - Durban R14k","Famous Brands","Durban"),("Code 14 + PDP - Gauteng R16k","Shoprite","Gauteng"),("Truck Driver - Cape Town R22k","Logistics SA","Cape Town"),("Delivery Driver - Soweto R12k","Takealot","Soweto"),("Cashier - Soweto R8.5k","Shoprite","Soweto"),("Shop Assistant - Pretoria R9k","Clicks","Pretoria"),("General Worker - CPT R7.5k","Woolworths","Cape Town"),("Retail Assistant - JHB R8k","Pick n Pay","Johannesburg"),("Nursing Assistant - Gauteng R18k","Life Hospital","Gauteng"),("Social Worker - Gauteng R22k","Dept Social","Gauteng"),("Soc Analyst - Remote R40k","NPO","Remote"),("Customer Care - Centurion R11k","Telkom","Centurion"),("Security Guard - JHB R9k","Fidelity","Johannesburg"),("Cleaner - Soweto Schools R6.5k","Dept Education","Soweto"),("Admin Clerk - Pretoria R15k","SASSA","Pretoria")]
-    res=[]
+        slug=re.sub(r'[^a-z0-9]+','-',title.lower()).strip('-')[:60]
+        jobs.append({"title":title,"company":comp,"location":place,"url":url,"slug":slug,"desc":desc})
+    if jobs:
+        return jobs[:18]
+    # fallback DB so never blank
+    DB=[("Social Worker - JHB","Dept Social","Gauteng"),("Soc Analyst NPO","NPO","Remote"),("Driver Code 14 JHB R25k","Unitrans","Johannesburg"),("Driver Code 10 Durban","Famous Brands","Durban"),("Cashier Soweto R8.5k","Shoprite","Soweto"),("General Worker CPT","Woolworths","Cape Town"),("Retail Assistant JHB","Pick n Pay","Johannesburg")]
+    out=[]
     for t,c,l in DB:
-        if locl and locl!="all south africa":
-            if locl not in l.lower() and not any(k in l.lower() for k in loc_keywords): continue
-        if ql and not any(w in t.lower() for w in q_words): continue
-        res.append({"title":t,"company":c,"location":l,"url":f"https://www.adzuna.co.za/search?q={t}", "slug": re.sub(r'[^a-z0-9]+','-', t.lower()).strip('-'), "desc": t})
-    if not res:
-        res=[{"title":t,"company":c,"location":l,"url":"https://www.adzuna.co.za/", "slug": re.sub(r'[^a-z0-9]+','-', t.lower()).strip('-'), "desc": t} for t,c,l in DB[:10]]
-    return res[:18]
+        if locl and locl!="all south africa" and locl not in l.lower():
+            if not any(k in l.lower() for k in MAP.get(loc,[])): continue
+        if q and q.lower() not in t.lower(): continue
+        out.append({"title":t,"company":c,"location":l,"url":"https://www.adzuna.co.za/","slug":re.sub(r'[^a-z0-9]+','-',t.lower()),"desc":t})
+    return out[:18] if out else [{"title":t,"company":c,"location":l,"url":"https://www.adzuna.co.za/","slug":"x","desc":t} for t,c,l in DB[:6]]
 
 @app.route("/",methods=["GET","POST"])
 def home():
-    qq=sanitize((request.form.get("q","") if request.method=="POST" else request.args.get("q","")).strip(),40)
-    loc=sanitize((request.form.get("loc","") if request.method=="POST" else request.args.get("loc","")).strip(),40)
-    jobs=get_jobs(qq,loc)
+    qq=request.values.get("q","").strip()[:40]
+    loc=request.values.get("loc","").strip()[:40]
+    print(f"SEARCH q={qq} loc={loc}")
+    jobs=get_jobs(qq, loc)
     return render_template("index.html",jobs=jobs,qq=qq,loc=loc,provinces=PROVINCES)
 
 @app.route("/ads.txt")
@@ -116,21 +93,14 @@ def health(): return "ok",200
 def cv(): return render_template("cv.html")
 @app.route("/post-job")
 def post_job(): return render_template("post_job.html")
-@app.route('/jobs/<slug>')
-def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
 @app.route('/apply/<slug>')
 def apply_external(slug):
-    try:
-        s = slug.lower()
-        jobs = DB_CACHE.get("jobs", [])
-        for j in jobs:
-            title = j.get('title','').lower()
-            redirect_url = j.get('redirect_url','')
-            if not redirect_url: continue
-            slugified = re.sub(r'[^a-z0-9]+','-', title).strip('-')
-            if slugified and slugified in s: return redirect(redirect_url, code=302)
-        return redirect(f'https://www.adzuna.co.za/jobs?what={s.split("-")[0]}', code=302)
-    except:
-        return redirect('https://www.adzuna.co.za/', code=302)
+    s=slug.lower()
+    for j in CACHE.get("jobs",[]):
+        t=j.get("title","").lower()
+        u=j.get("redirect_url","")
+        if u and re.sub(r'[^a-z0-9]+','-',t).strip('-') in s:
+            return redirect(u,302)
+    return redirect(f"https://www.adzuna.co.za/jobs?what={s.split('-')[0]}",302)
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
