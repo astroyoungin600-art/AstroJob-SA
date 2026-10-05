@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, Response
+from flask import Flask, request, render_template, Response, redirect
 from datetime import timedelta
 import re, random, os
 app = Flask(__name__)
@@ -45,5 +45,10 @@ def cv(): return render_template("cv.html")
 def post_job(): return render_template("post_job.html")
 @app.route('/jobs/<slug>')
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
+@app.route('/apply/<slug>')
+def apply_external(slug):
+    q=slug.replace('-', ' ')
+    return redirect(f'https://www.google.com/search?q={q} jobs South Africa', code=302)
+
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
