@@ -16,7 +16,21 @@ def sanitize(s,n): return re.sub(r'[^a-zA-Z0-9 \-]', '', s)[:n] if s else ""
 ADZUNA_ID = os.getenv("ADZUNA_ID", "REDACTED")
 ADZUNA_KEY = os.getenv("ADZUNA_KEY", "REDACTED")
 DB_CACHE = {"jobs": [], "time": 0}
+
 PROVINCES = ["Eastern Cape","Free State","Gauteng","KwaZulu-Natal","Limpopo","Mpumalanga","North West","Northern Cape","Western Cape"]
+
+# Accurate province -> cities mapping
+PROVINCE_MAP = {
+ "Gauteng": ["gauteng","johannesburg","jhb","pretoria","pta","centurion","soweto","sandton","midrand","ekurhuleni","randburg","tembisa"],
+ "Western Cape": ["western cape","cape town","cpt","stellenbosch","paarl","george"],
+ "KwaZulu-Natal": ["kwazulu","kzn","durban","pietermaritzburg","pinelands"],
+ "Eastern Cape": ["eastern cape","port elizabeth","gqeberha","east london"],
+ "Free State": ["free state","bloemfontein"],
+ "Limpopo": ["limpopo","polokwane"],
+ "Mpumalanga": ["mpumalanga","nelspruit","witbank","mbombela"],
+ "North West": ["north west","rustenburg","mahikeng","klerksdorp"],
+ "Northern Cape": ["northern cape","kimberley"],
+}
 
 def fetch_adzuna(q, loc):
     import requests, time
@@ -26,7 +40,7 @@ def fetch_adzuna(q, loc):
         try:
             what = q if q else ""
             where = loc if loc else "South Africa"
-            url = f"https://api.adzuna.com/v1/api/jobs/za/search/1?app_id={ADZUNA_ID}&app_key={ADZUNA_KEY}&results_per_page=30&what={what}&where={where}&sort_by=date"
+            url = f"https://api.adzuna.com/v1/api/jobs/za/search/1?app_id={ADZUNA_ID}&app_key={ADZUNA_KEY}&results_per_page=50&what={what}&where={where}&sort_by=date"
             r = requests.get(url, timeout=10).json()
             jobs = r.get("results", [])
             DB_CACHE["jobs"] = jobs
@@ -39,18 +53,40 @@ def fetch_adzuna(q, loc):
 def get_jobs(q, loc):
     raw = fetch_adzuna(q, loc)
     res = []
+    ql = (q or "").lower()
+    locl = (loc or "").lower()
+    loc_keywords = PROVINCE_MAP.get(loc, [locl]) if loc else []
+
     for j in raw:
         title = j.get("title","").strip()
         company = j.get("company",{}).get("display_name","")
         location = j.get("location",{}).get("display_name","South Africa")
+        desc = j.get("description","")
         redirect_url = j.get("redirect_url","")
+
+        # --- ACCURATE FILTER ---
+        if ql and ql not in title.lower() and ql not in desc.lower():
+            continue
+        if loc and locl:
+            loc_match = locl in location.lower()
+            # also check city mapping
+            if not loc_match:
+                loc_match = any(k in location.lower() for k in loc_keywords)
+            if not loc_match:
+                continue
+
         slug = re.sub(r'[^a-z0-9]+','-', title.lower()).strip('-') + "-" + re.sub(r'[^a-z0-9]+','-', company.lower()).strip('-')
-        res.append({"title": title,"company": company,"location": location,"url": redirect_url,"slug": slug,"desc": j.get("description","")[:150]})
+        res.append({"title": title,"company": company,"location": location,"url": redirect_url,"slug": slug,"desc": desc[:150]})
+
+    # fallback to local DB if still empty
     if not res:
         for t,c,l in DB:
-            if q and q.lower() not in t.lower(): continue
-            if loc and loc.lower() not in l.lower() and loc.lower()!= "south africa" and loc!= "": continue
+            if ql and ql not in t.lower(): continue
+            if loc and locl:
+                if locl not in l.lower() and not any(k in l.lower() for k in loc_keywords):
+                    continue
             res.append({"title":t,"company":c,"location":l,"url":f"https://www.adzuna.co.za/search?q={t}", "slug": re.sub(r'[^a-z0-9]+','-', t.lower()).strip('-'), "desc": t})
+
     random.shuffle(res)
     return res[:18]
 
@@ -99,6 +135,5 @@ def apply_external(slug):
     except Exception as e:
         print(f"apply error {e}")
         return redirect('https://www.adzuna.co.za/', code=302)
-
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
