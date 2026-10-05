@@ -89,37 +89,39 @@ def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{s
 @app.route('/apply/<slug>')
 def apply_external(slug):
     try:
-        s = slug.lower().replace('-', ' ').strip()
-        # 1. Exact match by slugified title
-        for job in DB:
-            if isinstance(job, dict):
-                title = job.get('title','')
-                url = job.get('url') or job.get('redirect_url') or ''
-                company = job.get('company','')
-            else:
-                # tuple format fallback
-                url = job[0] if len(job)>0 else ''
-                title = job[1] if len(job)>1 else ''
-                company = job[2] if len(job)>2 else ''
-            if not url: continue
-            t_low = title.lower()
-            # if slug contains title words or vice versa
-            if t_low and (t_low in s or s in t_low):
-                return redirect(url, code=302)
-            if company and company.lower() in s:
-                return redirect(url, code=302)
-        # 2. Fallback: return first Adzuna url that matches any word
-        for job in DB:
-            url = job.get('url') if isinstance(job, dict) else job[0]
-            if url and 'adzuna' in url.lower():
-                title = (job.get('title') if isinstance(job, dict) else job[1]).lower()
-                if any(w in title for w in s.split() if len(w)>3):
-                    return redirect(url, code=302)
+        s = slug.lower()
+        # 1. Search in cache (real Adzuna jobs with redirect_url)
+        from datetime import datetime
+        jobs = []
+        try:
+            jobs = DB_CACHE.get("jobs", []) if 'DB_CACHE' in globals() else []
+        except: pass
+
+        for j in jobs:
+            title = j.get('title','').lower()
+            company = j.get('company',{}).get('display_name','').lower() if isinstance(j.get('company'), dict) else str(j.get('company','')).lower()
+            redirect_url = j.get('redirect_url','')
+            if not redirect_url: continue
+            # match by slug
+            slugified = re.sub(r'[^a-z0-9]+','-', title).strip('-')
+            if slugified and slugified in s:
+                return redirect(redirect_url, code=302)
+            # match by any 2 words
+            if title and any(w in s for w in title.split() if len(w)>3):
+                return redirect(redirect_url, code=302)
+
+        # 2. If not in cache, use short keyword not full slug
+        # take only first 2 words: e.g. driver-jobs -> driver
+        q = s.split('-')[0] # driver
+        if len(q) < 3:
+            q = ' '.join(s.split('-')[:2])
+        # Search Adzuna with short term - will have results
+        return redirect(f'https://www.adzuna.co.za/jobs?what={q}', code=302)
     except Exception as e:
         print(f"apply error {e}")
-    # FINAL fallback - Adzuna SA search (main company aggregator you use)
-    q=slug.replace('-', ' ')
-    return redirect(f'https://www.adzuna.co.za/search?q={q}', code=302)
+        return redirect('https://www.adzuna.co.za/', code=302)
+
+
 
 
 @app.route('/privacy')
