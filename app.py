@@ -47,8 +47,39 @@ def post_job(): return render_template("post_job.html")
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
 @app.route('/apply/<slug>')
 def apply_external(slug):
+    try:
+        s = slug.lower().replace('-', ' ').strip()
+        # 1. Exact match by slugified title
+        for job in DB:
+            if isinstance(job, dict):
+                title = job.get('title','')
+                url = job.get('url') or job.get('redirect_url') or ''
+                company = job.get('company','')
+            else:
+                # tuple format fallback
+                url = job[0] if len(job)>0 else ''
+                title = job[1] if len(job)>1 else ''
+                company = job[2] if len(job)>2 else ''
+            if not url: continue
+            t_low = title.lower()
+            # if slug contains title words or vice versa
+            if t_low and (t_low in s or s in t_low):
+                return redirect(url, code=302)
+            if company and company.lower() in s:
+                return redirect(url, code=302)
+        # 2. Fallback: return first Adzuna url that matches any word
+        for job in DB:
+            url = job.get('url') if isinstance(job, dict) else job[0]
+            if url and 'adzuna' in url.lower():
+                title = (job.get('title') if isinstance(job, dict) else job[1]).lower()
+                if any(w in title for w in s.split() if len(w)>3):
+                    return redirect(url, code=302)
+    except Exception as e:
+        print(f"apply error {e}")
+    # FINAL fallback - Adzuna SA search (main company aggregator you use)
     q=slug.replace('-', ' ')
-    return redirect(f'https://www.google.com/search?q={q} jobs South Africa', code=302)
+    return redirect(f'https://www.adzuna.co.za/search?q={q}', code=302)
+
 
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
