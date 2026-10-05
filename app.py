@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, Response, redirect
 import re, random, os, time
+from urllib.parse import quote_plus
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "astro-2026-final-fix")
 try:
@@ -46,21 +47,18 @@ def get_jobs(q, loc):
         title=j.get("title","")
         comp=j.get("company",{}).get("display_name","")
         place=j.get("location",{}).get("display_name","South Africa")
-        # STRICT province filter - no Cape Town when Gauteng selected
         if locl and locl!="all south africa":
             keys=MAP.get(loc, [locl])
             if not any(k in place.lower() for k in keys):
                 continue
         slug=re.sub(r'[^a-z0-9]+','-',title.lower()).strip('-')[:70]
-        # store safe searchable URL, NOT expiring redirect_url
-        safe_url = f"https://www.adzuna.co.za/jobs/search?q={title.replace(' ','+')}&w={place.replace(' ','+')}"
+        safe_url = f"https://www.adzuna.co.za/jobs/search?q={quote_plus(title)}&w={quote_plus(place)}"
         out.append({"title":title,"company":comp,"location":place,"url":safe_url,"slug":slug,"desc":j.get("description","")[:150],"orig_url":j.get("redirect_url","")})
     if out:
         random.shuffle(out)
         return out[:18]
-    # fallback never blank
     DB=[("Driver Code 14 - JHB R25k","Unitrans","Johannesburg"),("Social Worker Gauteng R22k","Dept Social","Gauteng"),("Cashier Soweto R8.5k","Shoprite","Soweto")]
-    return [{"title":t,"company":c,"location":l,"url":f"https://www.adzuna.co.za/jobs/search?q={t.replace(' ','+')}","slug":re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-'),"desc":t,"orig_url":""} for t,c,l in DB]
+    return [{"title":t,"company":c,"location":l,"url":f"https://www.adzuna.co.za/jobs/search?q={quote_plus(t)}","slug":re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-'),"desc":t,"orig_url":""} for t,c,l in DB]
 
 @app.route("/",methods=["GET","POST"])
 def home():
@@ -71,19 +69,29 @@ def home():
 
 @app.route("/apply/<slug>")
 def apply_external(slug):
-    # NEVER use expired redirect_url - always search, so no "Cannot find page"
+    # FINAL FIX: NEVER details, ALWAYS clean search, no-cache
     try:
         s=slug.replace("-"," ")
-        # try find original job in cache to get better query
+        title=s
         for j in CACHE.get("jobs",[]):
             t=j.get("title","")
-            slugified=re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-').strip('-')
+            if not t: continue
+            slugified=re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-')
             if slugified and slugified[:50] in slug:
-                # redirect to LIVE Adzuna search, not expired details page
-                return redirect(f"https://www.adzuna.co.za/jobs/search?q={t.replace(' ','+')}", code=302)
-        return redirect(f"https://www.adzuna.co.za/jobs/search?q={s}", code=302)
-    except:
-        return redirect("https://www.adzuna.co.za/jobs", code=302)
+                title=t
+                break
+        clean_title=re.sub(r'[^a-zA-Z0-9 ]',' ',title)
+        clean_title=re.sub(r'\s+',' ',clean_title).strip()
+        if len(clean_title)<3:
+            clean_title="jobs"
+        url=f"https://www.adzuna.co.za/jobs/search?q={quote_plus(clean_title)}"
+        resp=redirect(url, code=302)
+        resp.headers["Cache-Control"]="no-store, no-cache, must-revalidate, max-age=0"
+        resp.headers["Pragma"]="no-cache"
+        return resp
+    except Exception as e:
+        print("apply error", e)
+        return redirect("https://www.adzuna.co.za/jobs/search?q=jobs", code=302)
 
 @app.route("/ads.txt")
 def ads_txt(): return "google.com, pub-2133699761079270, DIRECT, f08c47fec0942fa0",200,{'Content-Type':'text/plain'}
@@ -101,4 +109,3 @@ def post_job(): return render_template("post_job.html")
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
-# v1791236657 fix apply redirect
