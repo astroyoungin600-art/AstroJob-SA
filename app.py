@@ -11,18 +11,59 @@ try:
     from siem import siem_bp
     app.register_blueprint(siem_bp)
 except: pass
-DB=[("Driver Code 14 - JHB R25k","Unitrans","Johannesburg"),("Driver Code 10 - Durban R14k","Famous Brands","Durban"),("Code 14 + PDP - Gauteng R16k","Shoprite","Gauteng"),("Truck Driver - Cape Town R22k","Logistics SA","Cape Town"),("Delivery Driver - Soweto R12k","Takealot","Soweto"),("Cashier - Soweto R8.5k","Shoprite","Soweto"),("Shop Assistant - Pretoria R9k","Clicks","Pretoria"),("General Worker - CPT R7.5k","Woolworths","Cape Town"),("Retail Assistant - JHB R8k","Pick n Pay","Johannesburg"),("Nursing Assistant - Gauteng R18k","Life Hospital","Gauteng"),("Enrolled Nurse - JHB R28k","Netcare","Johannesburg"),("Data Entry Remote R12k","Remote Co","Remote"),("IT Support Remote R35k","BCX","Remote"),("Software Dev - CPT R65k","Takealot","Cape Town"),("Call Centre - Centurion R11k","Telkom","Centurion"),("Security Guard - JHB R9k","Fidelity","Johannesburg"),("Cleaner - Soweto Schools R6.5k","Dept Education","Soweto"),("Waiter - Sandton R7k+Tips","Restaurant","Sandton"),("Admin Clerk - Pretoria R15k","SASSA","Pretoria"),("Learnership - Mr Price","Mr Price","Durban")]
+
 def sanitize(s,n): return re.sub(r'[^a-zA-Z0-9 \-]', '', s)[:n] if s else ""
-def get_jobs(q,loc):
-    ql,locl=q.lower(),loc.lower(); res=[]
-    for t,c,l in DB:
-        if ql in t.lower() or ql in ["all","","jobs","driver"] or ("driver" in t.lower() and "driver" in ql):
-            if locl in ["south africa","sa","all",""] or locl in l.lower(): res.append({"title":t,"company":c,"location":l,"link":f"/jobs/{t.lower().replace(' ','-')[:40]}"})
-    while len(res)<18:
+
+ADZUNA_ID = os.getenv("ADZUNA_ID", "REDACTED")
+ADZUNA_KEY = os.getenv("ADZUNA_KEY", "REDACTED")
+
+DB_CACHE = {"jobs": [], "time": 0}
+
+def fetch_adzuna(q, loc):
+    import requests, time
+    # cache 10 min
+    if time.time() - DB_CACHE["time"] < 600 and DB_CACHE["jobs"]:
+        jobs = DB_CACHE["jobs"]
+    else:
+        try:
+            url = f"https://api.adzuna.com/v1/api/jobs/za/search/1?app_id={ADZUNA_ID}&app_key={ADZUNA_KEY}&results_per_page=30&what={q}&where={loc}&sort_by=date"
+            r = requests.get(url, timeout=10).json()
+            jobs = r.get("results", [])
+            DB_CACHE["jobs"] = jobs
+            DB_CACHE["time"] = time.time()
+        except Exception as e:
+            print(f"Adzuna fetch error {e}")
+            jobs = DB_CACHE["jobs"] or []
+    return jobs
+
+def get_jobs(q, loc):
+    raw = fetch_adzuna(q, loc)
+    res = []
+    for j in raw:
+        title = j.get("title","").strip()
+        company = j.get("company",{}).get("display_name","")
+        location = j.get("location",{}).get("display_name","South Africa")
+        redirect_url = j.get("redirect_url","")
+        # slug for /apply/
+        slug = re.sub(r'[^a-z0-9]+','-', title.lower()).strip('-') + "-" + re.sub(r'[^a-z0-9]+','-', company.lower()).strip('-')
+        res.append({
+            "title": title,
+            "company": company,
+            "location": location,
+            "url": redirect_url,  # REAL main company URL from Adzuna
+            "slug": slug,
+            "desc": j.get("description","")[:150]
+        })
+    if not res:
+        # fallback hardcoded if API fails
         for t,c,l in DB:
-            if not any(r["title"]==t for r in res): res.append({"title":t,"company":c,"location":l,"link":f"/jobs/{t.lower().replace(' ','-')[:40]}"})
-            if len(res)>=18: break
-    random.shuffle(res); return res[:18]
+            res.append({"title":t,"company":c,"location":l,"url":f"https://www.adzuna.co.za/search?q={t}", "slug": re.sub(r'[^a-z0-9]+','-', t.lower()).strip('-'), "desc": t})
+    random.shuffle(res)
+    return res[:18]
+
+# Keep old DB as fallback only
+DB=[("Driver Code 14 - JHB R25k","Unitrans","Johannesburg"),("Driver Code 10 - Durban R14k","Famous Brands","Durban"),("Code 14 + PDP - Gauteng R16k","Shoprite","Gauteng"),("Truck Driver - Cape Town R22k","Logistics SA","Cape Town"),("Delivery Driver - Soweto R12k","Takealot","Soweto"),("Cashier - Soweto R8.5k","Shoprite","Soweto"),("Shop Assistant - Pretoria R9k","Clicks","Pretoria"),("General Worker - CPT R7.5k","Woolworths","Cape Town"),("Retail Assistant - JHB R8k","Pick n Pay","Johannesburg"),("Nursing Assistant - Gauteng R18k","Life Hospital","Gauteng"),("Enrolled Nurse - JHB R28k","Netcare","Johannesburg"),("Data Entry Remote R12k","Remote Co","Remote"),("IT Support Remote R35k","BCX","Remote"),("Software Dev - CPT R65k","Takealot","Cape Town"),("Call Centre - Centurion R11k","Telkom","Centurion"),("Security Guard - JHB R9k","Fidelity","Johannesburg"),("Cleaner - Soweto Schools R6.5k","Dept Education","Soweto"),("Waiter - Sandton R7k+Tips","Restaurant","Sandton"),("Admin Clerk - Pretoria R15k","SASSA","Pretoria"),("Learnership - Mr Price","Mr Price","Durban")]
+
 @app.route("/",methods=["GET","POST"])
 def home():
     qq=sanitize((request.form.get("q","") if request.method=="POST" else request.args.get("q","Driver")).strip(),40) or "Driver"

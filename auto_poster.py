@@ -2,7 +2,7 @@ import os, requests, threading, time
 from datetime import datetime
 
 def fetch_and_prepare():
-    ID=os.environ.get("ADZUNA_ID"); KEY=os.environ.get("ADZUNA_KEY")
+    ID=os.environ.get("ADZUNA_ID", "REDACTED"); KEY=os.environ.get("ADZUNA_KEY", "REDACTED")
     if not ID or not KEY:
         print("ADZUNA keys missing")
         return []
