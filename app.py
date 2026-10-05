@@ -60,7 +60,7 @@ def get_jobs(q, loc):
         return out[:18]
     # fallback never blank
     DB=[("Driver Code 14 - JHB R25k","Unitrans","Johannesburg"),("Social Worker Gauteng R22k","Dept Social","Gauteng"),("Cashier Soweto R8.5k","Shoprite","Soweto")]
-    return [{"title":t,"company":c,"location":l,"url":f"https://www.adzuna.co.za/jobs/search?q={t.replace(' ','+')}","slug":re.sub(r'[^a-z0-9]+','-',t.lower()),"desc":t,"orig_url":""} for t,c,l in DB]
+    return [{"title":t,"company":c,"location":l,"url":f"https://www.adzuna.co.za/jobs/search?q={t.replace(' ','+')}","slug":re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-'),"desc":t,"orig_url":""} for t,c,l in DB]
 
 @app.route("/",methods=["GET","POST"])
 def home():
@@ -77,7 +77,7 @@ def apply_external(slug):
         # try find original job in cache to get better query
         for j in CACHE.get("jobs",[]):
             t=j.get("title","")
-            slugified=re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-')
+            slugified=re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-').strip('-')
             if slugified and slugified[:50] in slug:
                 # redirect to LIVE Adzuna search, not expired details page
                 return redirect(f"https://www.adzuna.co.za/jobs/search?q={t.replace(' ','+')}", code=302)
