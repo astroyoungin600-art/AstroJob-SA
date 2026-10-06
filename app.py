@@ -80,12 +80,12 @@ def get_jobs(q, loc):
         place=j.get("location",{}).get("display_name","South Africa")
         slug=slugify(title)
         if j.get("source")=="adzuna":
-            url=f"https://www.adzuna.co.za/jobs/search?q={quote_plus(title)}"
+            url=f"https://www.adzuna.co.za/search?q={quote_plus(title)}"
         else:
-            url=j.get("redirect_url", f"https://www.adzuna.co.za/jobs/search?q={quote_plus(title)}")
+            url=j.get("redirect_url", f"https://www.adzuna.co.za/search?q={quote_plus(title)}")
         out.append({"title":title,"company":comp,"location":place,"url":url,"slug":slug,"desc":j.get("description","")[:150],"source":j.get("source")})
     random.shuffle(out)
-    return out[:18] or [{"title":"Driver Code 14 JHB R25k","company":"Unitrans","location":"Johannesburg","url":f"https://www.adzuna.co.za/jobs/search?q={quote_plus('Driver Code 14')}","slug":slugify("Driver Code 14"),"desc":"Verified"}]
+    return out[:18] or [{"title":"Driver Code 14 JHB R25k","company":"Unitrans","location":"Johannesburg","url":f"https://www.adzuna.co.za/search?q={quote_plus('Driver Code 14')}","slug":slugify("Driver Code 14"),"desc":"Verified"}]
 
 @app.route("/",methods=["GET","POST"])
 def home():
@@ -112,13 +112,13 @@ def apply_external(slug):
             resp=redirect(best["redirect_url"], code=302)
             resp.headers["Cache-Control"]="no-store"
             return resp
-        url="https://www.adzuna.co.za/jobs/search?q=" + quote_plus(clean)
+        url="https://www.adzuna.co.za/search?q=" + quote_plus(clean)
         resp=redirect(url, code=302)
         resp.headers["Cache-Control"]="no-store"
         return resp
     except Exception as e:
         print("apply error",e)
-        return redirect("https://www.adzuna.co.za/jobs/search?q=" + quote_plus(slug.replace("-"," ")), code=302)
+        return redirect("https://www.adzuna.co.za/search?q=" + quote_plus(slug.replace("-"," ")), code=302)
 
 @app.route("/ads.txt")
 def ads_txt():
