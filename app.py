@@ -134,8 +134,22 @@ def sitemap():
 def health(): return "ok",200
 @app.route("/cv")
 def cv(): return render_template("cv.html")
-@app.route("/post-job")
-def post_job(): return render_template("post_job.html")
+@app.route("/post-job", methods=["GET","POST"])
+def post_job():
+    if request.method == "POST":
+        from datetime import datetime
+        from urllib.parse import quote_plus
+        data = {k: request.form.get(k,"")[:500] for k in ["company","title","location","desc","contact","package"]}
+        try:
+            with open("job_requests.txt","a") as f:
+                f.write(f"
+--- {datetime.now()} ---
+{data}
+")
+        except: pass
+        msg = f"NEW JOB POST {data.get('package')} | Company: {data.get('company')} | Title: {data.get('title')} | Loc: {data.get('location')} | Contact: {data.get('contact')}"
+        return redirect(f"https://wa.me/27812602918?text={quote_plus(msg)}")
+    return render_template("post_job.html")
 @app.route('/jobs/<slug>')
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
 @app.route('/privacy')
