@@ -111,12 +111,12 @@ def apply_external(slug):
                 resp=redirect(orig, code=302)
                 resp.headers["Cache-Control"]="no-store"
                 return resp
-        url=f"https://www.adzuna.co.za/jobs/search?q={quote_plus(clean)}" if (best and best.get("source")=="adzuna") else f"https://www.google.com/search?q={quote_plus(clean+' South Africa jobs')}&ibp=htl;jobs"
+        url=f"https://www.adzuna.co.za/jobs/search?q={quote_plus(clean)}" if (best and best.get("source")=="adzuna") else f"https://www.adzuna.co.za/jobs/search?q={quote_plus(clean)}"
         resp=redirect(url, code=302)
         resp.headers["Cache-Control"]="no-store"
         return resp
     except:
-        return redirect(f"https://www.google.com/search?q={quote_plus(slug.replace('-',' '))}+jobs+South+Africa&ibp=htl;jobs", code=302)
+        return redirect(f"https://www.adzuna.co.za/jobs/search?q={quote_plus(slug.replace)}", code=302)
 
 @app.route("/ads.txt")
 def ads_txt():
