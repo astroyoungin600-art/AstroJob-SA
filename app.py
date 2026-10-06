@@ -149,3 +149,7 @@ except: pass
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
+
+@app.route("/employee")
+def employee_redirect():
+    return redirect("/post-job", code=301)
