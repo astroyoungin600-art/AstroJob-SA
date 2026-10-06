@@ -16,25 +16,26 @@ body{background:#f5f7fb}
 .btns{display:flex;gap:8px}
 .btn-cv{background:#22c55e;color:#111;padding:10px 18px;border-radius:14px;text-decoration:none;font-weight:800;text-align:center;min-width:70px}
 .btn-post{background:#1e3a8a;color:#fff;padding:10px 18px;border-radius:14px;text-decoration:none;font-weight:800;text-align:center;min-width:80px}
-.hero{background:linear-gradient(135deg,#1e3a8a 0%,#0f766e 50%,#15803d 100%);color:#fff;padding:40px 20px 50px;text-align:center}
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#0f766e 50%,#15803d 100%);color:#fff;padding:36px 20px 50px;text-align:center}
 .hero h1{font-size:32px;line-height:1.2;font-weight:900}
 .hero p{margin-top:10px;opacity:.9}
-.search-wrap{background:#fff;margin:-30px 14px 20px;border-radius:20px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.pro-motivate{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);margin:16px auto 0;max-width:600px;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.4;backdrop-filter:blur(6px)}
+.pro-motivate b{color:#facc15}
+.search-wrap{background:#fff;margin:-28px 14px 12px;border-radius:20px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
 .search-wrap input,.search-wrap select{width:100%;padding:16px;border:2px solid #111;border-radius:14px;font-size:16px}
-.search-wrap select{background:#f3f4f6;border:1px solid #ddd}
-.btn-search{background:#1e3a8a;color:#fff;border:none;padding:14px 28px;border-radius:14px;font-weight:900;font-size:16px;cursor:pointer;margin-top:12px;width:auto}
-.links-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.link-pill{background:#eef2ff;color:#1e3a8a;padding:8px 14px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;border:1px solid #c7d2fe;display:inline-block}
+.search-wrap select{background:#f3f4f6;border:1px solid #ddd;margin-top:10px}
+.btn-search{background:#1e3a8a;color:#fff;border:none;padding:14px 28px;border-radius:14px;font-weight:900;font-size:16px;cursor:pointer;margin-top:12px}
+.links-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.link-pill{background:#eef2ff;color:#1e3a8a;padding:9px 15px;border-radius:20px;font-size:13px;font-weight:800;text-decoration:none;border:1px solid #c7d2fe}
 .link-pill.green{background:#dcfce7;color:#166534;border-color:#86efac}
-.jobs{padding:0 14px 100px;max-width:900px;margin:auto}
+.jobs{padding:0 14px 110px;max-width:900px;margin:auto}
 .card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;border:1px solid #eee}
 .badge{font-size:11px;background:#eef2ff;color:#1e3a8a;padding:3px 8px;border-radius:20px}
 .btn-apply{background:#111;color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none;display:inline-block;font-weight:700;margin-top:8px}
 .footer{background:#0f172a;color:#9ca3af;text-align:center;padding:14px;font-size:13px}
-.coffee-hang{position:fixed;bottom:20px;left:16px;background:#facc15;color:#111;padding:12px 18px;border-radius:30px;text-decoration:none;font-weight:900;display:flex;align-items:center;gap:6px;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:99;border:2px solid #111;animation:float 2s ease-in-out infinite}
-.whatsapp-float{position:fixed;bottom:20px;right:16px;background:#22c55e;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:99;text-decoration:none}
+.coffee-hang{position:fixed;bottom:22px;left:16px;background:#facc15;color:#111;padding:12px 18px;border-radius:30px;text-decoration:none;font-weight:900;display:flex;align-items:center;gap:6px;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:99;border:2px solid #111;animation:float 2s ease-in-out infinite}
+.whatsapp-float{position:fixed;bottom:22px;right:16px;background:#22c55e;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:99;text-decoration:none}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-@media(max-width:600px){.search-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -58,20 +59,21 @@ body{background:#f5f7fb}
 <div class="hero">
   <h1>Your Future Starts<br>Here, Mzansi 🇿🇦</h1>
   <p>Real verified jobs SA, no scams!</p>
+  <div class="pro-motivate" id="motivate">
+    💼 <b>Pro Tip:</b> <span id="mtext">Your dream job doesn't come to you — you go to it. 1 application a day keeps unemployment away.</span>
+  </div>
 </div>
 
 <div class="search-wrap">
   <form action="/search" method="GET">
-    <input name="q" value="{{qq}}" placeholder="🔍 Search your dream Job..." style="margin-bottom:10px">
+    <input name="q" value="{{qq}}" placeholder="🔍 Search your dream Job... e.g. Driver, Nurse, Teacher">
     <select name="loc">
       <option value="">All South Africa</option>
       {% for p in provinces %}
       <option value="{{p}}" {% if loc==p %}selected{% endif %}>{{p}}</option>
       {% endfor %}
     </select>
-    <div>
-      <button class="btn-search" type="submit">🔍 Search</button>
-    </div>
+    <button class="btn-search" type="submit">🔍 Search</button>
     <div class="links-row">
       <a href="/search" class="link-pill green">🌍 Browse all live results across South Africa</a>
       <a href="/search" class="link-pill">⚙️ Advanced search</a>
@@ -91,10 +93,22 @@ body{background:#f5f7fb}
   {% endfor %}
 </div>
 
-<div class="footer">© 2026 Astro Job SA - Made by Mthembisi</div>
+<div class="footer">© 2026 Astro Job SA - Made by Mthembisi | Mzansi's Trusted Job Hub 🇿🇦</div>
 
 <a class="coffee-hang" href="https://www.buymeacoffee.com/astroyoungin" target="_blank">☕ Buy Me a Coffee</a>
 <a class="whatsapp-float" href="https://whatsapp.com/channel/0029Vb6J4zX9hXEy9q2uA40b" target="_blank">💬</a>
+
+<script>
+const msgs=[
+"Your dream job doesn't come to you — you go to it. 1 application a day keeps unemployment away.",
+"Mzansi, 500+ employers are hiring today. Your CV is your ticket — send it now.",
+"Success is not for the lazy. Apply today, interview tomorrow, paycheck next week. 🚀",
+"Real jobs. No scams. No fees. Just your future starting now. — Made by Mthembisi for SA youth.",
+"Don't wait for opportunity — search your dream job and create it. Your family is counting on you."
+];
+let i=0;
+setInterval(()=>{i=(i+1)%msgs.length; document.getElementById('mtext').innerText=msgs[i];},4000);
+</script>
 
 </body>
 </html>
