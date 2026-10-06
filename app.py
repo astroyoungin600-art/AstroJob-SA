@@ -2,40 +2,37 @@ from flask import Flask, request, render_template, Response, redirect
 import re, random, os, time, requests
 from urllib.parse import quote_plus
 from bs4 import BeautifulSoup
+from datetime import timedelta
+
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "astro-2026-final-fix")
+app.secret_key = os.getenv("SECRET_KEY", os.urandom(24).hex())
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
 try:
     from siem import siem_bp
     app.register_blueprint(siem_bp)
-except: pass
+except Exception as e:
+    print(f"SIEM not loaded: {e}")
 
-ADZUNA_ID = os.getenv("ADZUNA_ID", "REDACTED")
-ADZUNA_KEY = os.getenv("ADZUNA_KEY", "REDACTED")
+ADZUNA_ID = os.getenv("ADZUNA_ID")
+ADZUNA_KEY = os.getenv("ADZUNA_KEY")
 CACHE = {"jobs": [], "time": 0}
 PROVINCES = ["Eastern Cape","Free State","Gauteng","KwaZulu-Natal","Limpopo","Mpumalanga","North West","Northern Cape","Western Cape"]
-MAP = {
- "Gauteng": ["gauteng","johannesburg","jhb","pretoria","pta","centurion","soweto","sandton","midrand","ekurhuleni","randburg"],
- "Western Cape": ["western cape","cape town","cpt","stellenbosch","paarl","george"],
- "KwaZulu-Natal": ["kwazulu","kzn","durban","pietermaritzburg"],
- "Eastern Cape": ["eastern cape","port elizabeth","gqeberha","east london"],
- "Free State": ["free state","bloemfontein"],
- "Limpopo": ["limpopo","polokwane"],
- "Mpumalanga": ["mpumalanga","nelspruit","witbank"],
- "North West": ["north west","rustenburg","mahikeng"],
- "Northern Cape": ["northern cape","kimberley"],
-}
-HEADERS = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 AstroJobSA/1.0"}
+HEADERS = {"User-Agent":"Mozilla/5.0 AstroJobSA/1.0"}
 
 def slugify(t):
     return re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-')[:70]
 
 def fetch_adzuna(q, loc):
+    if not ADZUNA_ID or not ADZUNA_KEY:
+        return []
     try:
         url=f"https://api.adzuna.com/v1/api/jobs/za/search/1?app_id={ADZUNA_ID}&app_key={ADZUNA_KEY}&results_per_page=30&what={quote_plus(q or '')}&where={quote_plus(loc or 'South Africa')}"
         r=requests.get(url, timeout=10).json().get("results",[])
         for j in r: j["source"]="adzuna"
         return r
-    except: return []
+    except:
+        return []
 
 def fetch_careers24(q, loc, limit=10):
     jobs=[]
@@ -46,46 +43,33 @@ def fetch_careers24(q, loc, limit=10):
         for a in soup.find_all('a', href=True)[:40]:
             href=a['href']
             title=a.get_text(strip=True)
-            if '/jobs/' in href and len(title)>12 and len(title)<80 and 'careers24' in href or href.startswith('/jobs/'):
+            if '/jobs/' in href and 12 < len(title) < 80:
                 if href.startswith('/'): href='https://www.careers24.com'+href
                 jobs.append({"title":title,"company":{"display_name":"Verified"},"location":{"display_name":loc or "South Africa"},"description":title,"redirect_url":href,"source":"careers24"})
-                if len(jobs)>=limit: break
+            if len(jobs)>=limit: break
     except Exception as e:
         print("careers24 error",e)
     return jobs
 
 def fetch_all(q, loc):
-    # Use cache for 20 min to avoid Render timeouts hammering PNet
     if CACHE["jobs"] and time.time()-CACHE["time"]<1200 and not q:
         return CACHE["jobs"]
-    
     all_jobs=[]
-    # Try verified first but with SHORT timeout - don't block page
     try:
-        # PNet is blocked on Render, so skip on server, only try locally
         if os.getenv("RENDER") is None:
             from verified_fetch import fetch_pnet
             all_jobs+=fetch_pnet(q, loc)
     except: pass
-    
     all_jobs+=fetch_careers24(q, loc, limit=8)
-    
-    # Adzuna ALWAYS works from Render - primary verified live feed
     if len(all_jobs)<10:
-        adz=fetch_adzuna(q, loc)
-        all_jobs+=adz
-
-    # dedup
-    seen=set()
-    uniq=[]
+        all_jobs+=fetch_adzuna(q, loc)
+    seen=set(); uniq=[]
     for j in all_jobs:
         k=j.get("title","").lower()[:50]
         if k in seen: continue
         seen.add(k); uniq.append(j)
-
     if uniq and not q:
-        CACHE["jobs"]=uniq
-        CACHE["time"]=time.time()
+        CACHE["jobs"]=uniq; CACHE["time"]=time.time()
     return uniq or CACHE["jobs"]
 
 def get_jobs(q, loc):
@@ -96,14 +80,13 @@ def get_jobs(q, loc):
         comp=j.get("company",{}).get("display_name","Verified Company")
         place=j.get("location",{}).get("display_name","South Africa")
         slug=slugify(title)
-        # NEVER use expired adzuna details - always search
         if j.get("source")=="adzuna":
             url=f"https://www.adzuna.co.za/jobs/search?q={quote_plus(title)}"
         else:
             url=j.get("redirect_url", f"https://www.adzuna.co.za/jobs/search?q={quote_plus(title)}")
         out.append({"title":title,"company":comp,"location":place,"url":url,"slug":slug,"desc":j.get("description","")[:150],"source":j.get("source")})
     random.shuffle(out)
-    return out[:18] or [{"title":"Driver Code 14 JHB R25k","company":"Unitrans","location":"Johannesburg","url":f"https://www.adzuna.co.za/jobs/search?q={quote_plus('Driver Code 14')}", "slug":slugify("Driver Code 14 JHB"),"desc":"Verified"}]
+    return out[:18] or [{"title":"Driver Code 14 JHB R25k","company":"Unitrans","location":"Johannesburg","url":f"https://www.adzuna.co.za/jobs/search?q={quote_plus('Driver Code 14')}","slug":slugify("Driver Code 14"),"desc":"Verified"}]
 
 @app.route("/",methods=["GET","POST"])
 def home():
@@ -130,18 +113,23 @@ def apply_external(slug):
                 return resp
         url=f"https://www.adzuna.co.za/jobs/search?q={quote_plus(clean)}" if (best and best.get("source")=="adzuna") else f"https://www.google.com/search?q={quote_plus(clean+' South Africa jobs')}&ibp=htl;jobs"
         resp=redirect(url, code=302)
-        resp.headers["Cache-Control"]="no-store, no-cache, must-revalidate, max-age=0"
-        resp.headers["Pragma"]="no-cache"
+        resp.headers["Cache-Control"]="no-store"
         return resp
     except:
         return redirect(f"https://www.google.com/search?q={quote_plus(slug.replace('-',' '))}+jobs+South+Africa&ibp=htl;jobs", code=302)
 
 @app.route("/ads.txt")
-def ads_txt(): return "google.com, pub-2133699761079270, DIRECT, f08c47fec0942fa0",200,{'Content-Type':'text/plain'}
+def ads_txt():
+    return "google.com, pub-2133699761079270, DIRECT, f08c47fec0942fa0",200,{'Content-Type':'text/plain'}
+
 @app.route("/robots.txt")
-def robots(): return "User-agent: *\nAllow: /\nSitemap: https://astrojob-sa.onrender.com/sitemap.xml\n",200,{'Content-Type':'text/plain'}
+def robots():
+    return "User-agent: *\nAllow: /\nSitemap: https://astrojob-sa.onrender.com/sitemap.xml\n",200,{'Content-Type':'text/plain'}
+
 @app.route("/sitemap.xml")
-def sitemap(): return Response('<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://astrojob-sa.onrender.com/</loc></url></urlset>', mimetype='application/xml')
+def sitemap():
+    return Response('<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://astrojob-sa.onrender.com/</loc></url></urlset>', mimetype='application/xml')
+
 @app.route("/health")
 def health(): return "ok",200
 @app.route("/cv")
@@ -152,3 +140,12 @@ def post_job(): return render_template("post_job.html")
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
+
+# Auto poster scheduler
+try:
+    from auto_poster import start_scheduler
+    start_scheduler()
+except: pass
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
