@@ -176,6 +176,14 @@ def post_job():
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
 
 @app.route('/privacy')
+from flask import redirect
+
+@app.route("/buymeacoffee")
+def coffee(): return redirect("https://buymeacoffee.com/astrojobsa", code=302)
+
+@app.route("/coffee")
+def coffee2(): return redirect("https://buymeacoffee.com/astrojobsa", code=302)
+
 def privacy_page(): return render_template("privacy.html")
 
 @app.route('/about')
