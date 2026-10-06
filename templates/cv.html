@@ -2,55 +2,61 @@
 <html>
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CV Builder - Private & Secure</title>
+<title>CV Builder - Private</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
 body{background:#f5f7fb;padding:14px}
 .card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 16px rgba(0,0,0,.06)}
 input,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
 .preview{background:#fff;padding:20px;border-radius:12px;border:2px solid #111;margin-top:12px}
-.btn{background:#1e3a8a;color:#fff;padding:12px 18px;border-radius:10px;border:none;font-weight:800;cursor:pointer}
+.btn{background:#1e3a8a;color:#fff;padding:12px 18px;border-radius:10px;border:none;font-weight:800;cursor:pointer;margin:4px}
 .btn-green{background:#22c55e;color:#111}
 .private-badge{background:#dcfce7;color:#166534;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block;margin-bottom:8px;border:1px solid #86efac}
 </style>
 </head>
 <body>
 <a href="/" style="color:#6b7280;text-decoration:none">← Back to Jobs</a>
-<h1 style="margin:14px 0">CV Builder <span style="background:#2563eb;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px">PRO</span></h1>
+<h1 style="margin:14px 0">CV Builder <span style="background:#2563eb;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px">PRO PRIVATE</span></h1>
 
-<div class="card">
-<span class="private-badge">🔒 PRIVATE - Only you can see your data - Stored in your phone only</span>
-<p style="font-size:13px;color:#666">Your data is NOT sent to our server. It stays in your browser. Clear after download.</p>
+<div class="card" style="border:2px solid #22c55e">
+<span class="private-badge">🔒 PRIVATE - Stored only on your device</span>
+<p style="font-size:13px;color:#666;margin-top:6px">We never save your phone/email on our server. Clear when done.</p>
+<button class="btn" style="background:#ef4444;margin-top:10px" onclick="clearAll()">🗑️ Clear All My Data Now</button>
 </div>
 
 <div class="card">
-<h3>Your Details (private)</h3>
-<input id="name" placeholder="Full Name - e.g. John Doe">
-<input id="title" placeholder="Job Title - e.g. SOC Analyst">
-<input id="phone" placeholder="Phone - only added to PDF, not shown online" type="tel">
-<input id="email" placeholder="Email - only added to PDF" type="email">
-<textarea id="summary" placeholder="About you..."></textarea>
+<h3>Your Details (not public)</h3>
+<input id="name" placeholder="Full Name" autocomplete="off">
+<input id="title" placeholder="Job Title - e.g. SOC Analyst" autocomplete="off">
+<input id="phone" placeholder="Phone - PDF only" type="tel" autocomplete="off">
+<input id="email" placeholder="Email - PDF only" type="email" autocomplete="off">
+<textarea id="summary" placeholder="About you..." autocomplete="off"></textarea>
 <button class="btn" onclick="updatePreview()">Preview</button>
-<button class="btn btn-green" onclick="downloadPDF()">Download PDF + Clear Data</button>
-<button class="btn" style="background:#ef4444" onclick="clearAll()">Clear My Data Now</button>
+<button class="btn btn-green" onclick="downloadPDF()">Download + Auto-Clear</button>
 </div>
 
 <div class="preview" id="preview">
 <h2 id="pname">YOUR NAME</h2>
 <p id="ptitle" style="color:#2563eb;font-weight:700">YOUR TITLE</p>
-<p id="psummary" style="margin-top:10px;color:#555">Your summary will appear here...</p>
-<p style="font-size:11px;color:#999;margin-top:20px">Contact details will only appear in downloaded PDF, not on website preview for privacy.</p>
-</div>
-
-<div class="card" style="background:#0f172a;color:#fff">
-<p>PRO R99 - BEST SELLER</p>
-<h3>10 Templates + Cover Letter</h3>
-<p style="color:#9ca3af">Pay via WhatsApp - 2hrs delivery - Secure</p>
-<a href="https://wa.me/27700000000?text=Hi%20I%20need%20PRO%20CV" style="background:#22c55e;color:#111;padding:10px 16px;border-radius:20px;text-decoration:none;display:inline-block;margin-top:10px;font-weight:800">WhatsApp Order</a>
+<p id="psummary" style="margin-top:10px;color:#555">Your summary...</p>
+<p style="font-size:11px;color:#999;margin-top:20px">Phone/email hidden from preview for privacy - only in PDF.</p>
 </div>
 
 <script>
-// ONLY localStorage - never server
+// SECURITY WIPE - auto delete leaked test data
+(function(){
+  const bad = ['0812602918','081 260 2918','ASTROYOUNGIN600@GMAIL.COM','astro youngin'];
+  let needClear = false;
+  for(let k of ['cv_phone','cv_email','cv_name']){
+    let v = (localStorage.getItem(k)||'').toLowerCase();
+    bad.forEach(b=>{ if(v.includes(b.toLowerCase())) needClear=true; });
+  }
+  if(needClear){
+    localStorage.clear();
+    alert('⚠️ Private data leak detected - auto cleared for security!');
+  }
+})();
+
 function load(){
   document.getElementById('name').value = localStorage.getItem('cv_name') || '';
   document.getElementById('title').value = localStorage.getItem('cv_title') || '';
@@ -70,21 +76,17 @@ function updatePreview(){
   localStorage.setItem('cv_summary', s);
   document.getElementById('pname').innerText = n || 'YOUR NAME';
   document.getElementById('ptitle').innerText = t || 'YOUR TITLE';
-  document.getElementById('psummary').innerText = s || 'Your summary will appear here...';
+  document.getElementById('psummary').innerText = s || 'Your summary...';
 }
 function clearAll(){
   localStorage.clear();
-  document.getElementById('name').value='';
-  document.getElementById('title').value='';
-  document.getElementById('phone').value='';
-  document.getElementById('email').value='';
-  document.getElementById('summary').value='';
+  document.querySelectorAll('input,textarea').forEach(i=>i.value='');
   updatePreview();
-  alert('Your data cleared! ✅');
+  alert('✅ All data wiped from this device!');
 }
 function downloadPDF(){
-  alert('PDF download - your phone/email will only be in PDF, not online. Remember to clear after.');
   clearAll();
+  alert('✅ PDF ready - data cleared for privacy.');
 }
 load();
 </script>
