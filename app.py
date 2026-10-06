@@ -2,8 +2,7 @@ from flask import Flask, request, render_template, Response, redirect
 import re, random, os, time, requests
 from urllib.parse import quote_plus
 from bs4 import BeautifulSoup
-from datetime import timedelta
-
+from datetime import timedelta, datetime
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24).hex())
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
@@ -105,18 +104,21 @@ def apply_external(slug):
                 best=j; title=j.get("title",""); break
         clean=re.sub(r'[^a-zA-Z0-9 ]',' ',title)
         clean=re.sub(r'\s+',' ',clean).strip() or "jobs"
-        if best and best.get("source") in ("careers24","pnet"):
-            orig=best.get("redirect_url","")
-            if orig and "http" in orig:
-                resp=redirect(orig, code=302)
-                resp.headers["Cache-Control"]="no-store"
-                return resp
-        url=f"https://www.adzuna.co.za/jobs/search?q={quote_plus(clean)}" if (best and best.get("source")=="adzuna") else f"https://www.adzuna.co.za/jobs/search?q={quote_plus(clean)}"
+        try:
+            with open("clicks.txt","a") as f:
+                f.write(slug + " " + str(datetime.now()) + "\n")
+        except: pass
+        if best and best.get("redirect_url") and "http" in best.get("redirect_url",""):
+            resp=redirect(best["redirect_url"], code=302)
+            resp.headers["Cache-Control"]="no-store"
+            return resp
+        url="https://www.adzuna.co.za/jobs/search?q=" + quote_plus(clean)
         resp=redirect(url, code=302)
         resp.headers["Cache-Control"]="no-store"
         return resp
-    except:
-        return redirect(f"https://www.adzuna.co.za/jobs/search?q={quote_plus(slug.replace)}", code=302)
+    except Exception as e:
+        print("apply error",e)
+        return redirect("https://www.adzuna.co.za/jobs/search?q=" + quote_plus(slug.replace("-"," ")), code=302)
 
 @app.route("/ads.txt")
 def ads_txt():
@@ -132,30 +134,37 @@ def sitemap():
 
 @app.route("/health")
 def health(): return "ok",200
+
 @app.route("/cv")
 def cv(): return render_template("cv.html")
+
 @app.route("/post-job", methods=["GET","POST"])
 def post_job():
     if request.method == "POST":
-        from datetime import datetime
-        from urllib.parse import quote_plus
-        data = {k: request.form.get(k,"")[:500] for k in ["company","title","location","desc","contact","package"]}
+        company = request.form.get("company","")[:200]
+        title = request.form.get("title","")[:200]
+        location = request.form.get("location","")[:200]
+        contact = request.form.get("contact","")[:200]
+        package = request.form.get("package","")[:50]
+        desc = request.form.get("desc","")[:500]
         try:
             with open("job_requests.txt","a") as f:
-                f.write(f"
---- {datetime.now()} ---
-{data}
-")
+                f.write(f"{datetime.now()} | {package} | {company} | {title} | {location} | {contact}\n")
         except: pass
-        msg = f"NEW JOB POST {data.get('package')} | Company: {data.get('company')} | Title: {data.get('title')} | Loc: {data.get('location')} | Contact: {data.get('contact')}"
-        return redirect(f"https://wa.me/27812602918?text={quote_plus(msg)}")
+        msg = "NEW JOB: " + package + " | " + company + " | " + title + " | " + location + " | " + contact
+        return redirect("https://wa.me/27812602918?text=" + quote_plus(msg))
     return render_template("post_job.html")
+
 @app.route('/jobs/<slug>')
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
+
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
 
-# Auto poster scheduler
+@app.route("/employee")
+def employee_redirect():
+    return redirect("/post-job", code=301)
+
 try:
     from auto_poster import start_scheduler
     start_scheduler()
@@ -163,7 +172,3 @@ except: pass
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
-
-@app.route("/employee")
-def employee_redirect():
-    return redirect("/post-job", code=301)
