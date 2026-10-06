@@ -8,22 +8,31 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
 body{background:#f6f7f9}
-.header{background:#111;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+.header{background:#111;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .header a{color:#fff;text-decoration:none;margin-left:14px;font-size:14px}
+.header a.coffee{background:#ffdd00;color:#111;padding:6px 12px;border-radius:20px;font-weight:700}
 .hero{background:#111;color:#fff;padding:30px 20px;text-align:center}
-.search-box{background:#fff;max-width:800px;margin:20px auto;padding:14px;border-radius:14px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.search-box{background:#fff;max-width:850px;margin:20px auto;padding:14px;border-radius:14px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .search-box input,.search-box select{padding:12px;border:1px solid #ddd;border-radius:10px}
 .btn-search{background:#10b981;color:#fff;border:none;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}
 .jobs{max-width:900px;margin:auto;padding:15px}
 .card{background:#fff;border-radius:12px;padding:16px;margin:12px 0;border:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
 .badge{font-size:11px;background:#eef2ff;padding:3px 8px;border-radius:20px}
-@media(max-width:700px){.search-box{grid-template-columns:1fr} .card{flex-direction:column;align-items:flex-start}}
+.btn-apply{background:#111;color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none;display:inline-block;font-size:14px;font-weight:600}
+.btn-view{margin-left:8px;font-size:13px;color:#10b981;text-decoration:none}
+@media(max-width:700px){.search-box{grid-template-columns:1fr} .card{flex-direction:column;align-items:flex-start;gap:10px}}
 </style>
 </head>
 <body>
 <div class="header">
   <div><b>AstroJob SA</b></div>
-  <div><a href="/">Home</a><a href="/search">Advanced Search</a><a href="/post-job">Post Job R199</a><a href="/cv">CV Help</a></div>
+  <div>
+    <a href="/">Home</a>
+    <a href="/search">Advanced Search</a>
+    <a href="/post-job">Post Job R199</a>
+    <a href="/cv">CV Help</a>
+    <a class="coffee" href="https://www.buymeacoffee.com/astroyoungin" target="_blank">☕ Buy Me Coffee</a>
+  </div>
 </div>
 
 <div class="hero">
@@ -33,7 +42,7 @@ body{background:#f6f7f9}
   <form class="search-box" action="/search" method="GET">
     <input name="q" value="{{qq}}" placeholder="Job title, e.g. Driver Code 14, Teacher, Nurse">
     <select name="loc">
-      <option value="">All SA (All Provinces)</option>
+      <option value="">All SA</option>
       {% for p in provinces %}
       <option value="{{p}}" {% if loc==p %}selected{% endif %}>{{p}}</option>
       {% endfor %}
@@ -44,12 +53,11 @@ body{background:#f6f7f9}
       <option value="contract">Contract</option>
       <option value="parttime">Part-time</option>
     </select>
-    <button class="btn-search">Search</button>
+    <button class="btn-search" type="submit">Search</button>
   </form>
   <div style="margin-top:12px;font-size:13px;opacity:.8">
     <a href="/search" style="color:#10b981;text-decoration:none">Browse all live results</a> • 
-    <a href="/search" style="color:#10b981;text-decoration:none">Advanced search</a> • 
-    <a href="https://www.adzuna.co.za/jobs/advanced-search" target="_blank" style="color:#10b981;text-decoration:none">Adzuna Advanced</a>
+    <a href="/search" style="color:#10b981;text-decoration:none">Advanced search</a>
   </div>
 </div>
 
@@ -57,20 +65,21 @@ body{background:#f6f7f9}
   <p style="color:#666;font-size:14px">{{jobs|length}} live jobs • Updated today</p>
   {% for job in jobs %}
   <div class="card">
-    <div>
+    <div style="flex:1">
       <h3 style="font-size:16px">{{job.title}}</h3>
       <p style="font-size:13px;color:#666">{{job.company}} • {{job.location}} <span class="badge">{{job.source}}</span></p>
       <p style="font-size:12px;color:#888;margin-top:4px">{{job.desc}}</p>
     </div>
-    <div style="text-align:right">
-      <a href="/apply/{{job.slug}}" style="background:#111;color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none;display:inline-block;font-size:14px">Apply Now</a>
+    <div style="text-align:right;min-width:140px">
+      <a href="/apply/{{job.slug}}" class="btn-apply">Apply Now</a>
     </div>
   </div>
   {% endfor %}
 </div>
 
 <footer style="text-align:center;padding:20px;color:#888;font-size:12px">
-<a href="/privacy">Privacy</a> | <a href="/ads.txt">ads.txt</a> | AstroJob SA 2026 - All SA Jobs
+<a href="/privacy">Privacy</a> | <a href="/ads.txt">ads.txt</a> | AstroJob SA 2026 - All SA Jobs<br><br>
+<a href="https://www.buymeacoffee.com/astroyoungin" target="_blank" style="background:#ffdd00;color:#111;padding:8px 14px;border-radius:20px;text-decoration:none;font-weight:700">☕ Buy Me a Coffee to keep site running</a>
 </footer>
 </body>
 </html>
