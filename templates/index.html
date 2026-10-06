@@ -57,8 +57,6 @@
 <div class="job"><h3 style="margin:0 0 6px;color:#0a2a8a">{{j.title}}</h3><div style="font-size:12px;color:#64748b">🏢 {{j.company}} • 📍 {{j.location}}</div><div style="font-size:13px;margin-top:6px">{{j.desc}}...</div><div style="margin-top:10px"><a href="/apply/{{ j.slug }}" target="_blank" style="background:#0a2a8a;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:800">Apply →</a> <a href="https://wa.me/?text={{share_text}}%20https://astrojob-sa.onrender.com/apply/{{ j.title|lower|replace(' ', '-') }}-{{ j.company|lower|replace(' ', '-') }}" target="_blank" style="background:#22c55e;color:#000;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:800">WhatsApp</a></div></div>
 {% if loop.index % 3 == 0 %}
 <div style="margin:20px 0; min-height:100px; background:#fff; border-radius:12px; padding:10px">
-<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2133699761079270" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
-<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
 </div>
 {% endif %}
 {% endfor %}
