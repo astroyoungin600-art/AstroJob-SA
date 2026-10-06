@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, Response, redirect
+from flask import Flask, render_template, redirect, request, jsonify
 import re, random, os, time, requests
 from urllib.parse import quote_plus
 from bs4 import BeautifulSoup
@@ -176,7 +176,6 @@ def post_job():
 def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
 
 @app.route('/privacy')
-from flask import redirect
 
 @app.route("/buymeacoffee")
 def coffee(): return redirect("https://buymeacoffee.com/astrojobsa", code=302)
