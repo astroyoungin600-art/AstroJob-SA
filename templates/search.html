@@ -1,0 +1,65 @@
+{% extends "index.html" %}
+{% block content %}
+<style>
+.filter-bar{background:#fff;padding:15px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin:15px 0}
+.filter-bar input,.filter-bar select{padding:10px;border:1px solid #ddd;border-radius:8px;width:100%;margin:5px 0}
+.btn-green{background:#10b981;color:#fff;padding:12px 20px;border:none;border-radius:8px;width:100%;font-weight:700}
+.job-card{border:1px solid #eee;border-radius:12px;padding:15px;margin:10px 0;background:#fff}
+</style>
+
+<div style="max-width:900px;margin:auto;padding:15px">
+<h2 style="margin:10px 0">🔍 Advanced Search - All SA Jobs</h2>
+<p style="color:#666">Browse all live results across South Africa - like Adzuna but on AstroJob SA</p>
+
+<form class="filter-bar" action="/search" method="GET">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <input name="q" value="{{qq}}" placeholder="Job title, e.g. Driver Code 14">
+    <select name="loc">
+      <option value="">All Provinces (All SA)</option>
+      {% for prov in provinces %}
+      <option value="{{prov}}" {% if loc==prov %}selected{% endif %}>{{prov}}</option>
+      {% endfor %}
+    </select>
+    <select name="type">
+      <option value="">All Types</option>
+      <option value="permanent" {% if type=='permanent' %}selected{% endif %}>Permanent</option>
+      <option value="contract" {% if type=='contract' %}selected{% endif %}>Contract</option>
+      <option value="parttime" {% if type=='parttime' %}selected{% endif %}>Part-time</option>
+    </select>
+    <select name="salary">
+      <option value="">Any Salary</option>
+      <option value="10000">R10k+ per month</option>
+      <option value="20000">R20k+ per month</option>
+      <option value="30000">R30k+ per month</option>
+    </select>
+  </div>
+  <button class="btn-green" style="margin-top:10px">Search All Live Jobs →</button>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+    <a href="/search" style="font-size:13px;color:#10b981">Browse all live results</a> |
+    <a href="https://www.adzuna.co.za/jobs/advanced-search" target="_blank" style="font-size:13px;color:#10b981">Adzuna Advanced Search</a> |
+    <a href="/" style="font-size:13px">Return to home</a>
+  </div>
+</form>
+
+<p style="margin:15px 0;color:#666">{{jobs|length}} live jobs found {% if qq %}for "{{qq}}"{% endif %} {% if loc %}in {{loc}}{% endif %}</p>
+
+{% for job in jobs %}
+<div class="job-card">
+  <h3 style="margin:0 0 5px">{{job.title}}</h3>
+  <p style="margin:0;color:#666;font-size:14px">{{job.company}} • {{job.location}} • {{job.source}}</p>
+  <p style="font-size:13px;color:#444;margin:8px 0">{{job.desc}}</p>
+  <a href="/apply/{{job.slug}}" style="background:#111;color:#fff;padding:8px 14px;border-radius:8px;display:inline-block;text-decoration:none;font-size:14px">Apply → {{job.company}}</a>
+  <a href="https://www.adzuna.co.za/search?q={{job.title|urlencode}}" target="_blank" style="margin-left:8px;font-size:13px;color:#10b981">View on Adzuna</a>
+</div>
+{% endfor %}
+
+{% if not jobs %}
+<div style="text-align:center;padding:30px;background:#fff;border-radius:12px">
+<p>We cannot find the page you're looking for? Try:</p>
+<a href="/" style="color:#10b981">Return to home</a><br>
+<a href="/search" style="color:#10b981">Browse all live results across South Africa</a><br>
+<a href="/search" style="color:#10b981">Advanced search</a>
+</div>
+{% endif %}
+</div>
+{% endblock %}

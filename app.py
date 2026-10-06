@@ -189,3 +189,16 @@ except: pass
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
+
+@app.route("/search")
+def advanced_search():
+    qq = request.args.get("q","").strip()[:60]
+    loc = request.args.get("loc","").strip()[:40]
+    jtype = request.args.get("type","").strip()
+    salary = request.args.get("salary","").strip()
+    # Use existing fetch logic - searches ALL SA
+    jobs = get_jobs(qq, loc)
+    # Filter by type if requested (simple keyword filter)
+    if jtype:
+        jobs = [j for j in jobs if jtype.lower() in j.get("title","").lower() or jtype.lower() in j.get("desc","").lower()] or jobs
+    return render_template("search.html", jobs=jobs, qq=qq, loc=loc, type=jtype, salary=salary, provinces=PROVINCES)
