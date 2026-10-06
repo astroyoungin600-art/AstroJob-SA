@@ -97,29 +97,46 @@ def home():
 @app.route("/apply/<slug>")
 def apply_external(slug):
     try:
-        title=slug.replace("-"," ")
-        best=None
-        for j in CACHE.get("jobs",[]) or []:
-            if slugify(j.get("title",""))[:50] in slug:
-                best=j; title=j.get("title",""); break
-        clean=re.sub(r'[^a-zA-Z0-9 ]',' ',title)
-        clean=re.sub(r'\s+',' ',clean).strip() or "jobs"
+        from urllib.parse import quote_plus
+        from datetime import datetime
+        title = slug.replace("-", " ").strip()
+        # clean for search
+        clean = title[:60]
+
+        # 1. Try direct employer link from cache
+        best = None
+        for j in CACHE.get("jobs", []) or []:
+            if slug[:40] in j.get("title","").lower().replace(" ","-"):
+                best = j
+                break
+        
         try:
             with open("clicks.txt","a") as f:
-                f.write(slug + " " + str(datetime.now()) + "\n")
+                f.write(f"{slug} {datetime.now()}\n")
         except: pass
+
+        # 2. If we have direct link -> go there (best conversion)
         if best and best.get("redirect_url") and "http" in best.get("redirect_url",""):
-            resp=redirect(best["redirect_url"], code=302)
-            resp.headers["Cache-Control"]="no-store"
-            return resp
-        url="https://www.adzuna.co.za/search?q=" + quote_plus(clean)
-        resp=redirect(url, code=302)
+            return redirect(best["redirect_url"], code=302)
+
+        # 3. Else -> Adzuna LIVE search (this never 404s)
+        # This is the "Browse all live results across South Africa"
+        q = quote_plus(clean)
+        # Try 3 valid Adzuna URLs in order
+        # - /search?q=  = live search (primary)
+        # - /jobs/advanced-search?q= = advanced search
+        # - /search = browse all
+        url = f"https://www.adzuna.co.za/search?q={q}"
+        resp = redirect(url, code=302)
         resp.headers["Cache-Control"]="no-store"
         return resp
     except Exception as e:
-        print("apply error",e)
-        return redirect("https://www.adzuna.co.za/search?q=" + quote_plus(slug.replace("-"," ")), code=302)
+        print("apply error", e)
+        from urllib.parse import quote_plus
+        return redirect(f"https://www.adzuna.co.za/search?q={quote_plus(slug.replace('-',' '))}", code=302)
 
+
+@app.route("/ads.txt")
 @app.route("/ads.txt")
 def ads_txt():
     return "google.com, pub-2133699761079270, DIRECT, f08c47fec0942fa0",200,{'Content-Type':'text/plain'}
