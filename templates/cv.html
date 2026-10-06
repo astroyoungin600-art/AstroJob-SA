@@ -2,92 +2,143 @@
 <html>
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CV Builder - Private</title>
+<title>CV Builder PRO - Astro Job SA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
-body{background:#f5f7fb;padding:14px}
-.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 16px rgba(0,0,0,.06)}
-input,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
-.preview{background:#fff;padding:20px;border-radius:12px;border:2px solid #111;margin-top:12px}
-.btn{background:#1e3a8a;color:#fff;padding:12px 18px;border-radius:10px;border:none;font-weight:800;cursor:pointer;margin:4px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
+body{background:#f5f7fb}
+.top{padding:12px 16px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid #eee}
+input,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0;font-size:14px}
+textarea{min-height:80px}
+.btn{background:#1e3a8a;color:#fff;padding:12px 18px;border-radius:12px;border:none;font-weight:800;cursor:pointer;width:100%;margin-top:8px}
 .btn-green{background:#22c55e;color:#111}
-.private-badge{background:#dcfce7;color:#166534;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block;margin-bottom:8px;border:1px solid #86efac}
+.btn-red{background:#111;color:#fff}
+.badge{font-size:11px;background:#dcfce7;color:#166534;padding:5px 10px;border-radius:20px;font-weight:700;display:inline-block}
+.form-wrap{max-width:1000px;margin:14px auto;padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.form-wrap{grid-template-columns:1fr}}
+#cv-preview{background:#fff;max-width:800px;margin:20px auto;padding:40px;box-shadow:0 10px 30px rgba(0,0,0,.15);border-radius:4px}
+.cv-name{font-size:32px;font-weight:900;text-transform:uppercase}
+.cv-contact{font-size:11px;color:#555;text-align:right;float:right;line-height:1.4}
+.cv-title{color:#2563eb;font-weight:800;font-size:14px;letter-spacing:1px;margin-top:6px;text-transform:uppercase}
+.cv-line{height:4px;background:#111;margin:14px 0 18px}
+.cv-section{margin:18px 0}
+.cv-section h4{font-size:11px;letter-spacing:1.5px;font-weight:900;text-transform:uppercase;background:#111;color:#fff;display:inline-block;padding:4px 10px;border-radius:20px;margin-bottom:8px}
+.cv-text{font-size:13px;color:#333;line-height:1.5;white-space:pre-wrap}
 </style>
 </head>
 <body>
-<a href="/" style="color:#6b7280;text-decoration:none">← Back to Jobs</a>
-<h1 style="margin:14px 0">CV Builder <span style="background:#2563eb;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px">PRO PRIVATE</span></h1>
 
-<div class="card" style="border:2px solid #22c55e">
-<span class="private-badge">🔒 PRIVATE - Stored only on your device</span>
-<p style="font-size:13px;color:#666;margin-top:6px">We never save your phone/email on our server. Clear when done.</p>
-<button class="btn" style="background:#ef4444;margin-top:10px" onclick="clearAll()">🗑️ Clear All My Data Now</button>
+<div class="top">
+<a href="/" style="text-decoration:none;color:#666">← Back</a>
+<span class="badge">🔒 Private - Phone only</span>
 </div>
 
+<div class="form-wrap">
 <div class="card">
-<h3>Your Details (not public)</h3>
+<h3>Personal</h3>
 <input id="name" placeholder="Full Name" autocomplete="off">
-<input id="title" placeholder="Job Title - e.g. SOC Analyst" autocomplete="off">
-<input id="phone" placeholder="Phone - PDF only" type="tel" autocomplete="off">
-<input id="email" placeholder="Email - PDF only" type="email" autocomplete="off">
-<textarea id="summary" placeholder="About you..." autocomplete="off"></textarea>
-<button class="btn" onclick="updatePreview()">Preview</button>
-<button class="btn btn-green" onclick="downloadPDF()">Download + Auto-Clear</button>
+<input id="title" placeholder="Job Title - SOC ANALYST" autocomplete="off">
+<input id="phone" placeholder="Phone" autocomplete="off">
+<input id="email" placeholder="Email" autocomplete="off">
+<input id="location" placeholder="Location" autocomplete="off">
+<h3 style="margin-top:10px">Summary</h3>
+<textarea id="summary" placeholder="About you..."></textarea>
+<h3>Experience</h3>
+<textarea id="exp" placeholder="Jobs..."></textarea>
+<h3>Education</h3>
+<textarea id="edu" placeholder="Education..."></textarea>
+<h3>Skills</h3>
+<input id="skills" placeholder="Skills">
+<button class="btn" onclick="updatePreview()">👁️ Update Preview</button>
+<button class="btn btn-green" onclick="downloadPDF()">📄 Download Real PDF</button>
+<button class="btn btn-red" onclick="clearAll()">🗑️ Clear Data</button>
 </div>
 
-<div class="preview" id="preview">
-<h2 id="pname">YOUR NAME</h2>
-<p id="ptitle" style="color:#2563eb;font-weight:700">YOUR TITLE</p>
-<p id="psummary" style="margin-top:10px;color:#555">Your summary...</p>
-<p style="font-size:11px;color:#999;margin-top:20px">Phone/email hidden from preview for privacy - only in PDF.</p>
+<div class="card" style="background:#0f172a;color:#fff;height:fit-content">
+<h3 style="color:#fff">PRO R99</h3>
+<p style="font-size:13px;color:#9ca3af;margin-top:6px">Your data never leaves your phone. Stored in localStorage only. Auto-clears if 0812602918 detected.</p>
+<a href="https://wa.me/27812602918?text=PRO%20CV%20R99" style="background:#22c55e;color:#111;padding:10px;border-radius:20px;display:block;text-align:center;margin-top:10px;font-weight:800;text-decoration:none">WhatsApp Order</a>
+</div>
+</div>
+
+<div id="cv-preview">
+<div style="overflow:hidden">
+<div class="cv-contact" id="p-contact"></div>
+<div class="cv-name" id="p-name">YOUR NAME</div>
+<div class="cv-title" id="p-title">YOUR TITLE</div>
+</div>
+<div class="cv-line"></div>
+<div class="cv-section"><h4>Summary</h4><div class="cv-text" id="p-summary">Your summary...</div></div>
+<div class="cv-section"><h4>Experience</h4><div class="cv-text" id="p-exp">Experience...</div></div>
+<div class="cv-section"><h4>Education</h4><div class="cv-text" id="p-edu">Education...</div></div>
+<div class="cv-section"><h4>Skills</h4><div class="cv-text" id="p-skills">Skills...</div></div>
 </div>
 
 <script>
-// SECURITY WIPE - auto delete leaked test data
-(function(){
-  const bad = ['0812602918','081 260 2918','ASTROYOUNGIN600@GMAIL.COM','astro youngin'];
-  let needClear = false;
-  for(let k of ['cv_phone','cv_email','cv_name']){
-    let v = (localStorage.getItem(k)||'').toLowerCase();
-    bad.forEach(b=>{ if(v.includes(b.toLowerCase())) needClear=true; });
-  }
-  if(needClear){
-    localStorage.clear();
-    alert('⚠️ Private data leak detected - auto cleared for security!');
-  }
-})();
+const { jsPDF } = window.jspdf;
+
+// AUTO WIPE leaked data
+if((localStorage.getItem('cv_phone')||'').includes('0812602918') || (localStorage.getItem('cv_email')||'').toLowerCase().includes('astroyoungin600')){
+  localStorage.clear();
+}
 
 function load(){
-  document.getElementById('name').value = localStorage.getItem('cv_name') || '';
-  document.getElementById('title').value = localStorage.getItem('cv_title') || '';
-  document.getElementById('phone').value = localStorage.getItem('cv_phone') || '';
-  document.getElementById('email').value = localStorage.getItem('cv_email') || '';
-  document.getElementById('summary').value = localStorage.getItem('cv_summary') || '';
+  ['name','title','phone','email','location','summary','exp','edu','skills'].forEach(k=>{
+    const el=document.getElementById(k);
+    if(el) el.value = localStorage.getItem('cv_'+k) || '';
+  });
   updatePreview();
 }
+
 function updatePreview(){
-  const n = document.getElementById('name').value;
-  const t = document.getElementById('title').value;
-  const s = document.getElementById('summary').value;
-  localStorage.setItem('cv_name', n);
-  localStorage.setItem('cv_title', t);
-  localStorage.setItem('cv_phone', document.getElementById('phone').value);
-  localStorage.setItem('cv_email', document.getElementById('email').value);
-  localStorage.setItem('cv_summary', s);
-  document.getElementById('pname').innerText = n || 'YOUR NAME';
-  document.getElementById('ptitle').innerText = t || 'YOUR TITLE';
-  document.getElementById('psummary').innerText = s || 'Your summary...';
+  const vals={};
+  ['name','title','phone','email','location','summary','exp','edu','skills'].forEach(k=>{
+    vals[k]=document.getElementById(k).value;
+    localStorage.setItem('cv_'+k, vals[k]);
+  });
+  document.getElementById('p-name').innerText = vals.name || 'YOUR NAME';
+  document.getElementById('p-title').innerText = vals.title || 'YOUR TITLE';
+  document.getElementById('p-summary').innerText = vals.summary || 'Your summary...';
+  document.getElementById('p-exp').innerText = vals.exp || 'Experience...';
+  document.getElementById('p-edu').innerText = vals.edu || 'Education...';
+  document.getElementById('p-skills').innerText = vals.skills || 'Skills...';
+  document.getElementById('p-contact').innerHTML = `${vals.phone?vals.phone+'<br>':''}${vals.email?vals.email+'<br>':''}${vals.location||''}`;
 }
+
 function clearAll(){
   localStorage.clear();
   document.querySelectorAll('input,textarea').forEach(i=>i.value='');
   updatePreview();
-  alert('✅ All data wiped from this device!');
+  alert('✅ Wiped!');
 }
+
 function downloadPDF(){
-  clearAll();
-  alert('✅ PDF ready - data cleared for privacy.');
+  const g=id=>document.getElementById(id).value||'';
+  const name=g('name')||'CV';
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  let y=50;
+  doc.setFont('helvetica','bold'); doc.setFontSize(26);
+  doc.text(name.toUpperCase(),40,y);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(`${g('phone')} ${g('email')} ${g('location')}`,550,y,{align:'right'});
+  y+=18;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(37,99,235);
+  doc.text(g('title').toUpperCase(),40,y); doc.setTextColor(0,0,0); y+=8;
+  doc.setLineWidth(2); doc.line(40,y,555,y); y+=20;
+
+  function sec(t,c){
+    if(!c) return;
+    doc.setFillColor(17,17,17); doc.roundedRect(40,y-10,80,14,7,7,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.text(t.toUpperCase(),48,y);
+    doc.setTextColor(0,0,0); y+=14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    let lines=doc.splitTextToSize(c,475); doc.text(lines,40,y); y+=lines.length*13+16;
+    if(y>750){doc.addPage(); y=40;}
+  }
+  sec('Summary',g('summary')); sec('Experience',g('exp')); sec('Education',g('edu')); sec('Skills',g('skills'));
+  doc.save(`${name.replace(/ /g,'_')}_CV.pdf`);
 }
+
 load();
 </script>
 </body>
