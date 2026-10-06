@@ -1,16 +1,20 @@
 import os
 from flask import Blueprint, jsonify, render_template, request, session, redirect
 from collections import deque, Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import requests
 import time
 
 siem_bp = Blueprint('siem', __name__)
 THREATS = deque(maxlen=1000)
 FAILED = {}
+SAST = timezone(timedelta(hours=2))
 
 SIEM_USER = (os.getenv("SIEM_USER") or "admin").strip()
 SIEM_PASS = (os.getenv("SIEM_PASSWORD") or os.getenv("SIEM_PASS") or "change-me").strip()
+
+def now_sa():
+    return datetime.now(SAST)
 
 def get_geo(ip):
     try:
@@ -29,19 +33,19 @@ def log_request():
         return
     query = request.query_string.decode().lower() if request.query_string else ""
     full = f"{p} {query} {str(request.args).lower()}"
-    sigs = {'.env': 'ENV Leak','.git': 'Git Leak','wp-': 'WP Scan','phpmyadmin': 'phpMyAdmin','<script': 'XSS','onerror': 'XSS onerror','img src': 'XSS img','{{': 'SSTI','or 1=1': 'SQLi','union select': 'SQLi UNION','../': 'LFI','etc/passwd': 'LFI','select * from': 'SQLi'}
+    sigs = {'.env': 'ENV Leak','.git': 'Git Leak','wp-': 'WP Scan','phpmyadmin': 'phpMyAdmin','<script': 'XSS','onerror': 'XSS onerror','img src': 'XSS img','{{': 'SSTI','or 1=1': 'SQLi','union select': 'SQLi UNION','../': 'LFI','etc/passwd': 'LFI'}
     is_bad=False; reason="Legit Visit"
     for k,v in sigs.items():
         if k in full:
             is_bad=True; reason=v; break
     lat,lng,city=get_geo(ip)
-    THREATS.append({"ip":ip,"lat":lat,"lng":lng,"city":city,"type":"Attack" if is_bad else "Visit","path":request.path + (f"?{request.query_string.decode()}" if request.query_string else ""),"reason":reason,"time":datetime.now().strftime("%H:%M:%S"),"page":request.path,"time_str":datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    THREATS.append({"ip":ip,"lat":lat,"lng":lng,"city":city,"type":"Attack" if is_bad else "Visit","path":request.path + (f"?{request.query_string.decode()}" if request.query_string else ""),"reason":reason,"time":now_sa().strftime("%Y-%m-%d %H:%M:%S SAST"),"page":request.path})
 
 @siem_bp.route('/siem/login', methods=["GET","POST"])
 def login():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
     if FAILED.get(ip, {}).get('count',0) >=5 and time.time()-FAILED[ip]['time']<300:
-        return "<h3>Too many attempts. 5 min lock. <a href=/siem/login>Retry</a></h3>",429
+        return "<h3>Too many attempts. 5 min. <a href=/siem/login>Retry</a></h3>",429
     if request.method=="POST":
         u=request.form.get('username','').strip(); p=request.form.get('password','').strip()
         if u==SIEM_USER and p==SIEM_PASS:
@@ -49,15 +53,14 @@ def login():
             session.permanent=True
             session.permanent_session_lifetime=timedelta(days=7)
             session['siem_auth']=True
-            session['siem_user']=u
             return redirect('/siem')
         FAILED[ip]={'count':FAILED.get(ip,{}).get('count',0)+1,'time':time.time()}
-        return f"<h3 style=color:red>Wrong login {FAILED[ip]['count']}/5 <a href=/siem/login>Retry</a></h3>",401
-    return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:340px;text-align:center;border:1px solid #333"><h2>🔒 SIEM Login</h2><p style="font-size:11px;color:#94a3b8">7-day - © 2026 Astro Job SA</p><form method=POST><input name=username placeholder=Username required style="width:100%;padding:12px;margin:8px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder=Password required style="width:100%;padding:12px;margin:8px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800;cursor:pointer">LOGIN - 7 Days</button></form></div></body></html>"""
+        return f"<h3 style=color:red>Wrong {FAILED[ip]['count']}/5 <a href=/siem/login>Retry</a></h3>",401
+    return """<html><body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif"><div style="background:#111827;padding:30px;border-radius:16px;width:340px;text-align:center;border:1px solid #333"><h2>🔒 SIEM Login</h2><p style="font-size:11px;color:#94a3b8">SAST Time - © 2026 Astro Job SA</p><form method=POST><input name=username placeholder=Username required style="width:100%;padding:12px;margin:8px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><input name=password type=password placeholder=Password required style="width:100%;padding:12px;margin:8px 0;background:#000;color:#fff;border:1px solid #333;border-radius:8px"><button style="width:100%;padding:12px;background:#22c55e;border:none;border-radius:8px;font-weight:800">LOGIN</button></form></div></body></html>"""
 
 @siem_bp.route('/siem/logout')
 def logout():
-    session.pop('siem_auth',None); session.pop('siem_user',None); return redirect('/siem/login')
+    session.pop('siem_auth',None); return redirect('/siem/login')
 
 @siem_bp.route('/siem')
 def dashboard():
@@ -76,4 +79,4 @@ def security_logs():
     legit=[x for x in all_data if x['type']=="Visit"][-20:][::-1]
     malicious=[x for x in all_data if x['type']=="Attack"][-20:][::-1]
     total=len(all_data); blocked=len([x for x in all_data if x['type']=="Attack"]); uniq=len(set([x['ip'] for x in all_data]))
-    return {"total":total,"blocked":blocked,"uniq":uniq,"bots":blocked,"hours":["5h ago","4h ago","3h ago","2h ago","1h ago","now"],"visits":[max(1,len(legit)//6)]*6,"attacks":[max(0,blocked//6)]*6,"attackTypes":dict(Counter([x.get('reason','/') for x in malicious])) or {"Legit":len(legit)},"legit":[{"ip":x['ip'],"page":x['page'],"time":x['time']} for x in legit],"malicious":[{"ip":x['ip'],"reason":x['reason'],"time":x['time']} for x in malicious]}
+    return {"total":total,"blocked":blocked,"uniq":uniq,"bots":blocked,"hours":["5h ago","4h ago","3h ago","2h ago","1h ago","now"],"visits":[max(1,len(legit)//6)]*6,"attacks":[max(0,blocked//6)]*6,"attackTypes":dict(Counter([x.get('reason','/') for x in malicious])) or {"Legit":len(legit)},"legit":[{"ip":x['ip'],"page":x['page'],"time":x['time']} for x in legit],"malicious":[{"ip":x['ip'],"reason":x['reason'],"time":x['time']} for x in malicious],"server_time":now_sa().strftime("%Y-%m-%d %H:%M:%S SAST")}
