@@ -1,1 +1,99 @@
-[paste full code above]
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CV Builder - 10 Designs FREE | AstroJobSA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
+body{background:#f5f7fb}
+.top{padding:12px 16px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid #eee}
+input,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0;font-size:14px}
+textarea{min-height:80px}
+.btn{background:#1e3a8a;color:#fff;padding:12px 18px;border-radius:12px;border:none;font-weight:800;cursor:pointer;width:100%;margin-top:8px}
+.btn-green{background:#22c55e;color:#111}
+.btn-red{background:#111;color:#fff}
+.badge{font-size:11px;background:#dcfce7;color:#166534;padding:5px 10px;border-radius:20px;font-weight:700;display:inline-block}
+.form-wrap{max-width:1100px;margin:14px auto;padding:0 14px;display:grid;grid-template-columns:380px 1fr;gap:14px}
+@media(max-width:800px){.form-wrap{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
+.tpl-btn{padding:8px 2px;border:2px solid #e2e8f0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;background:#fff;text-align:center}
+.tpl-btn.active{border-color:#1e3a8a;background:#1e3a8a;color:#fff}
+#cv-preview{background:#fff;max-width:800px;margin:0 auto;padding:40px;box-shadow:0 10px 30px rgba(0,0,0,.15);border-radius:4px;min-height:900px}
+.cv-name{font-size:28px;font-weight:900;text-transform:uppercase;word-break:break-word}
+.cv-contact{font-size:11px;color:#555;text-align:right;float:right;line-height:1.4;word-break:break-all;max-width:45%}
+.cv-title{color:#2563eb;font-weight:800;font-size:13px;letter-spacing:1px;margin-top:6px;text-transform:uppercase}
+.cv-line{height:4px;background:#111;margin:14px 0 18px;clear:both}
+.cv-section{margin:18px 0}
+.cv-section h4{font-size:11px;letter-spacing:1.5px;font-weight:900;text-transform:uppercase;background:#111;color:#fff;display:inline-block;padding:4px 10px;border-radius:20px;margin-bottom:8px}
+.cv-text{font-size:13px;color:#333;line-height:1.5;white-space:pre-wrap}
+</style>
+</head><body>
+<div class="top"><a href="/" style="text-decoration:none;color:#666">← Back</a><span class="badge">10 Designs FREE • Private</span></div>
+<div class="form-wrap">
+<div>
+<div class="card">
+<h3>🎨 Choose Design (10 FREE)</h3>
+<div class="grid" id="tplGrid"></div>
+<h3>Personal</h3>
+<input id="name" placeholder="Full Name - MTHEMBISI MOTAKONE" autocomplete="off">
+<input id="title" placeholder="Job Title - SOC ANALYST" autocomplete="off">
+<input id="phone" placeholder="Phone - 081 260 2918" autocomplete="off">
+<input id="email" placeholder="Email" autocomplete="off">
+<input id="location" placeholder="Location - Soweto, Gauteng" autocomplete="off">
+<h3 style="margin-top:10px">Summary</h3><textarea id="summary" placeholder="About you..."></textarea>
+<h3>Experience</h3><textarea id="exp" placeholder="Jobs..."></textarea>
+<h3>Education</h3><textarea id="edu" placeholder="Education..."></textarea>
+<h3>Skills</h3><input id="skills" placeholder="Skills - Code 14, etc">
+<button class="btn" onclick="updatePreview()">👁️ Update Preview</button>
+<button class="btn btn-green" onclick="downloadPDF()">📄 Download Real PDF</button>
+<button class="btn btn-red" onclick="clearAll()">🗑️ Clear</button>
+</div>
+</div>
+<div>
+<div id="cv-preview"><div style="overflow:hidden"><div class="cv-contact" id="p-contact"></div><div class="cv-name" id="p-name">YOUR NAME</div><div class="cv-title" id="p-title">YOUR TITLE</div></div><div class="cv-line" id="p-line"></div><div class="cv-section"><h4>Summary</h4><div class="cv-text" id="p-summary"></div></div><div class="cv-section"><h4>Experience</h4><div class="cv-text" id="p-exp"></div></div><div class="cv-section"><h4>Education</h4><div class="cv-text" id="p-edu"></div></div><div class="cv-section"><h4>Skills</h4><div class="cv-text" id="p-skills"></div></div></div>
+</div>
+</div>
+<script>
+const { jsPDF } = window.jspdf;
+let curTpl = parseInt(localStorage.getItem('cv_tpl')||'1');
+const tplNames=['Classic','Blue Top','Centered','Dark Sidebar','Minimal','Left Bar','Purple Pro','Serif','Two Col','Blue Header'];
+const grid=document.getElementById('tplGrid');
+tplNames.forEach((n,i)=>{
+  let b=document.createElement('button'); b.className='tpl-btn'+(i+1==curTpl?' active':''); b.innerText=(i+1)+'. '+n; b.onclick=()=>{curTpl=i+1; localStorage.setItem('cv_tpl',curTpl); document.querySelectorAll('.tpl-btn').forEach((x,j)=>x.classList.toggle('active',j+1==curTpl)); updatePreview();}; grid.appendChild(b);
+});
+function load(){ ['name','title','phone','email','location','summary','exp','edu','skills'].forEach(k=>{ const el=document.getElementById(k); if(el) el.value=localStorage.getItem('cv_'+k)||'';}); updatePreview(); }
+function updatePreview(){
+  const vals={}; ['name','title','phone','email','location','summary','exp','edu','skills'].forEach(k=>{ vals[k]=document.getElementById(k).value; localStorage.setItem('cv_'+k, vals[k]); });
+  document.getElementById('p-name').innerText=vals.name||'YOUR NAME';
+  document.getElementById('p-title').innerText=vals.title||'YOUR TITLE';
+  document.getElementById('p-summary').innerText=vals.summary||'';
+  document.getElementById('p-exp').innerText=vals.exp||'';
+  document.getElementById('p-edu').innerText=vals.edu||'';
+  document.getElementById('p-skills').innerText=vals.skills||'';
+  document.getElementById('p-contact').innerHTML=`${vals.phone?vals.phone+'<br>':''}${vals.email?vals.email+'<br>':''}${vals.location||''}`;
+}
+function clearAll(){ localStorage.clear(); document.querySelectorAll('input,textarea').forEach(i=>i.value=''); curTpl=1; localStorage.setItem('cv_tpl','1'); updatePreview(); location.reload(); }
+function downloadPDF(){
+  const g=id=>document.getElementById(id).value||'';
+  const name=g('name')||'CV'; const title=g('title'); const phone=g('phone'); const email=g('email'); const loc=g('location');
+  const summary=g('summary'); const exp=g('exp'); const edu=g('edu'); const skills=g('skills');
+  const doc=new jsPDF({unit:'pt',format:'a4'}); let y=50; const W=595; const H=842;
+  if(curTpl==4){
+    doc.setFillColor(15,23,42); doc.rect(0,0,180,H,'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(18); let nLines=doc.splitTextToSize(name.toUpperCase(),150); doc.text(nLines,20,y); y+=nLines.length*18+6; doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(96,165,250); doc.text(title.toUpperCase(),20,y); y+=20; doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(203,213,225); doc.text(phone,20,y); y+=12; doc.text(email,20,y); y+=12; doc.text(loc,20,y); y+=24;
+    function sideSec(t,c){ if(!c) return; doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255); doc.text(t.toUpperCase(),20,y); y+=8; doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(226,232,240); let ls=doc.splitTextToSize(c,150); doc.text(ls,20,y); y+=ls.length*10+16; }
+    sideSec('Skills',skills); sideSec('Education',edu); y=50; let x=200;
+    function mainSec(t,c){ if(!c) return; doc.setFillColor(15,23,42); doc.roundedRect(x,y-10,70,14,7,7,'F'); doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.text(t.toUpperCase(),x+8,y); y+=14; doc.setTextColor(0,0,0); doc.setFont('helvetica','normal'); doc.setFontSize(10); let ls=doc.splitTextToSize(c,340); doc.text(ls,x,y); y+=ls.length*13+18; }
+    mainSec('Summary',summary); mainSec('Experience',exp);
+  } else if(curTpl==2){
+    doc.setFillColor(37,99,235); doc.rect(0,0,W,90,'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(26); doc.text(name.toUpperCase(),40,45); doc.setFontSize(11); doc.text(title.toUpperCase(),40,68); y=110; doc.setTextColor(0,0,0); doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.text(`${phone} | ${email} | ${loc}`,40,y); y+=18; doc.setLineWidth(2); doc.setDrawColor(37,99,235); doc.line(40,y,555,y); y+=20;
+    function sec(t,c){ if(!c) return; doc.setFillColor(37,99,235); doc.roundedRect(40,y-10,70,14,7,7,'F'); doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.text(t.toUpperCase(),48,y); y+=14; doc.setTextColor(0,0,0); doc.setFont('helvetica','normal'); doc.setFontSize(10); let ls=doc.splitTextToSize(c,475); doc.text(ls,40,y); y+=ls.length*13+16; }
+    sec('Summary',summary); sec('Experience',exp); sec('Education',edu); sec('Skills',skills);
+  } else {
+    doc.setFont('helvetica','bold'); doc.setFontSize(26); doc.text(name.toUpperCase(),40,y); doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.text(`${phone} ${email} ${loc}`,550,y,{align:'right'}); y+=18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(37,99,235); doc.text(title.toUpperCase(),40,y); doc.setTextColor(0,0,0); y+=8; doc.setLineWidth(2); doc.line(40,y,555,y); y+=20;
+    function sec(t,c){ if(!c) return; doc.setFillColor(17,17,17); doc.roundedRect(40,y-10,70,14,7,7,'F'); doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.text(t.toUpperCase(),48,y); doc.setTextColor(0,0,0); y+=14; doc.setFont('helvetica','normal'); doc.setFontSize(10); let ls=doc.splitTextToSize(c,475); doc.text(ls,40,y); y+=ls.length*13+16; if(y>750){doc.addPage(); y=40;} }
+    sec('Summary',summary); sec('Experience',exp); sec('Education',edu); sec('Skills',skills);
+  }
+  doc.save(`${name.replace(/ /g,'_')}_CV_Template${curTpl}.pdf`);
+}
+load();
+</script></body></html>
