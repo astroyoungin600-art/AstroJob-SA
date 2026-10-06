@@ -1,6 +1,4 @@
-.env
 __pycache__/
 *.pyc
-.venv
-*.bak
-waf.log
+channel_queue.txt
+.env
