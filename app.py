@@ -178,6 +178,12 @@ def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{s
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
 
+@app.route('/about')
+def about_page(): return render_template("about.html")
+
+@app.route('/contact')
+def contact_page(): return render_template("contact.html")
+
 @app.route("/employee")
 def employee_redirect():
     return redirect("/post-job", code=301)
