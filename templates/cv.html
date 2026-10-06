@@ -1,57 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free CV Builder - Astro Job SA</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CV Builder - Private & Secure</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
+body{background:#f5f7fb;padding:14px}
+.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+input,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
+.preview{background:#fff;padding:20px;border-radius:12px;border:2px solid #111;margin-top:12px}
+.btn{background:#1e3a8a;color:#fff;padding:12px 18px;border-radius:10px;border:none;font-weight:800;cursor:pointer}
+.btn-green{background:#22c55e;color:#111}
+.private-badge{background:#dcfce7;color:#166534;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block;margin-bottom:8px;border:1px solid #86efac}
+</style>
 </head>
-<body class="bg-[#f8fafc]">
-<div style="background:#25D366;color:white;text-align:center;padding:12px;font-weight:800">🔥 500+ Jobs Daily <a href="https://whatsapp.com/channel/0029VbDh9dGK5cDEn5Epcw0F" style="background:white;color:#25D366;padding:6px 12px;border-radius:20px;margin-left:8px;text-decoration:none">📲 Follow Jobsa🇿🇦</a></div>
+<body>
+<a href="/" style="color:#6b7280;text-decoration:none">← Back to Jobs</a>
+<h1 style="margin:14px 0">CV Builder <span style="background:#2563eb;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px">PRO</span></h1>
 
-<div class="max-w-[1300px] mx-auto flex flex-col lg:flex-row">
-  <div class="w-full lg:w-[400px] bg-white p-6 order-2 lg:order-1">
-    <a href="/" class="text-xs text-gray-400">← Back to Jobs</a>
-    <h1 class="text-2xl font-black mt-2">CV Builder <span class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded-full">PRO</span></h1>
-    <div class="mt-4 bg-gray-900 text-white rounded-xl p-4"><div class="text-xs opacity-70">PRO R99 - BEST SELLER</div><div class="font-bold text-sm">10 Templates + Cover Letter</div><div class="text-[11px] opacity-70 mt-1">Pay: 081 260 2918 (Mthembisi) - 2hrs delivery</div><a href="https://wa.me/27812602918?text=Hi%20Mthembisi%20🔥%20I%20want%20Pro%20CV%20R99" class="mt-2 inline-block bg-[#25D366] text-white px-4 py-2 rounded-full text-xs font-black">WhatsApp Order</a></div>
+<div class="card">
+<span class="private-badge">🔒 PRIVATE - Only you can see your data - Stored in your phone only</span>
+<p style="font-size:13px;color:#666">Your data is NOT sent to our server. It stays in your browser. Clear after download.</p>
+</div>
 
-    <div class="mt-5 space-y-3">
-      <input id="fName" placeholder="Full Name" class="w-full border rounded-lg p-3" oninput="render()">
-      <input id="fTitle" placeholder="Job Title e.g. Driver Code 14" class="w-full border rounded-lg p-3" oninput="render()">
-      <input id="fPhone" placeholder="Phone" class="w-full border rounded-lg p-3" oninput="render()">
-      <input id="fEmail" placeholder="Email" class="w-full border rounded-lg p-3" oninput="render()">
-      <textarea id="fSummary" rows="3" placeholder="Professional Summary" class="w-full border rounded-lg p-3" oninput="render()"></textarea>
-      <textarea id="fExp" rows="4" placeholder="Experience: Role | Company | Year - Desc" class="w-full border rounded-lg p-3" oninput="render()"></textarea>
-      <textarea id="fEdu" rows="2" placeholder="Education: Grade 12 | School | 2019" class="w-full border rounded-lg p-3" oninput="render()"></textarea>
-      <input id="fSkills" placeholder="Skills, comma separated" class="w-full border rounded-lg p-3" oninput="render()">
-    </div>
-    <button onclick="downloadPDF()" class="w-full bg-[#0a2a8a] text-white py-4 rounded-xl font-black mt-5">⬇ Download Free CV</button>
-  </div>
+<div class="card">
+<h3>Your Details (private)</h3>
+<input id="name" placeholder="Full Name - e.g. John Doe">
+<input id="title" placeholder="Job Title - e.g. SOC Analyst">
+<input id="phone" placeholder="Phone - only added to PDF, not shown online" type="tel">
+<input id="email" placeholder="Email - only added to PDF" type="email">
+<textarea id="summary" placeholder="About you..."></textarea>
+<button class="btn" onclick="updatePreview()">Preview</button>
+<button class="btn btn-green" onclick="downloadPDF()">Download PDF + Clear Data</button>
+<button class="btn" style="background:#ef4444" onclick="clearAll()">Clear My Data Now</button>
+</div>
 
-  <div class="flex-1 bg-gray-200 p-4 flex justify-center order-1 lg:order-2">
-    <div id="cv" class="bg-white w-full max-w-[700px] shadow-xl p-8 text-[13px]"><div class="flex justify-between border-b-4 border-black pb-4"><div><h1 id="pName" class="text-2xl font-black uppercase">YOUR NAME</h1><p id="pTitle" class="text-blue-700 font-bold text-xs uppercase mt-1">Job Title</p></div><div class="text-right text-[11px]"><div id="pPhone">Phone</div><div id="pEmail">Email</div></div></div><div class="mt-6"><div id="pSummary" class="text-xs text-gray-600"></div><div id="pExp" class="mt-4 text-xs"></div><div id="pSkills" class="mt-4 flex flex-wrap gap-1"></div><div id="pEdu" class="mt-4 text-xs"></div></div></div>
-  </div>
+<div class="preview" id="preview">
+<h2 id="pname">YOUR NAME</h2>
+<p id="ptitle" style="color:#2563eb;font-weight:700">YOUR TITLE</p>
+<p id="psummary" style="margin-top:10px;color:#555">Your summary will appear here...</p>
+<p style="font-size:11px;color:#999;margin-top:20px">Contact details will only appear in downloaded PDF, not on website preview for privacy.</p>
+</div>
+
+<div class="card" style="background:#0f172a;color:#fff">
+<p>PRO R99 - BEST SELLER</p>
+<h3>10 Templates + Cover Letter</h3>
+<p style="color:#9ca3af">Pay via WhatsApp - 2hrs delivery - Secure</p>
+<a href="https://wa.me/27700000000?text=Hi%20I%20need%20PRO%20CV" style="background:#22c55e;color:#111;padding:10px 16px;border-radius:20px;text-decoration:none;display:inline-block;margin-top:10px;font-weight:800">WhatsApp Order</a>
 </div>
 
 <script>
-function render(){
-  const v=id=>document.getElementById(id).value.trim();
-  document.getElementById('pName').innerText=v('fName')||'YOUR NAME';
-  document.getElementById('pTitle').innerText=v('fTitle')||'Job Title';
-  document.getElementById('pPhone').innerText=v('fPhone')||'Phone';
-  document.getElementById('pEmail').innerText=v('fEmail')||'Email';
-  document.getElementById('pSummary').innerText=v('fSummary')||'';
-  document.getElementById('pSkills').innerHTML=v('fSkills').split(',').map(s=>`<span class="bg-black text-white text-[10px] px-2 py-1 rounded-full">${s.trim()}</span>`).join('');
-  document.getElementById('pEdu').innerHTML=v('fEdu');
-  document.getElementById('pExp').innerHTML=v('fExp').replace(/\n/g,'<br>');
+// ONLY localStorage - never server
+function load(){
+  document.getElementById('name').value = localStorage.getItem('cv_name') || '';
+  document.getElementById('title').value = localStorage.getItem('cv_title') || '';
+  document.getElementById('phone').value = localStorage.getItem('cv_phone') || '';
+  document.getElementById('email').value = localStorage.getItem('cv_email') || '';
+  document.getElementById('summary').value = localStorage.getItem('cv_summary') || '';
+  updatePreview();
+}
+function updatePreview(){
+  const n = document.getElementById('name').value;
+  const t = document.getElementById('title').value;
+  const s = document.getElementById('summary').value;
+  localStorage.setItem('cv_name', n);
+  localStorage.setItem('cv_title', t);
+  localStorage.setItem('cv_phone', document.getElementById('phone').value);
+  localStorage.setItem('cv_email', document.getElementById('email').value);
+  localStorage.setItem('cv_summary', s);
+  document.getElementById('pname').innerText = n || 'YOUR NAME';
+  document.getElementById('ptitle').innerText = t || 'YOUR TITLE';
+  document.getElementById('psummary').innerText = s || 'Your summary will appear here...';
+}
+function clearAll(){
+  localStorage.clear();
+  document.getElementById('name').value='';
+  document.getElementById('title').value='';
+  document.getElementById('phone').value='';
+  document.getElementById('email').value='';
+  document.getElementById('summary').value='';
+  updatePreview();
+  alert('Your data cleared! ✅');
 }
 function downloadPDF(){
-  const el=document.getElementById('cv');
-  html2pdf().set({margin:5, filename:'CV_AstroJob.pdf', html2canvas:{scale:2}, jsPDF:{format:'a4'}}).from(el).save();
+  alert('PDF download - your phone/email will only be in PDF, not online. Remember to clear after.');
+  clearAll();
 }
-render();
+load();
 </script>
 </body>
 </html>
