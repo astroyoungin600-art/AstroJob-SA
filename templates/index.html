@@ -1,68 +1,76 @@
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Astro Job SA - Real Jobs | Made by Mthembisi</title>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2133699761079270" crossorigin="anonymous"></script>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AstroJob SA - Jobs in South Africa 2026</title>
+<meta name="description" content="Find verified jobs across all SA - Gauteng, Western Cape, KZN. Advanced search.">
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui;background:#f8fafc;color:#0f172a}
-#astroHeader{position:sticky;top:0;z-index:99999;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:4px solid #0a2a8a;box-shadow:0 2px 12px rgba(0,0,0,.08)}
-.btns{display:flex;gap:8px}.btns a{padding:10px 18px;border-radius:12px;font-weight:900;text-decoration:none}
-.btnCV{background:#22c55e;color:#000}.btnPost{background:#0a2a8a;color:#fff}
-.hero{background:linear-gradient(135deg,#0a2a8a 0%,#00a651 100%);color:#fff;padding:28px 16px;text-align:center}
-.searchBox{background:#fff;max-width:900px;margin:-18px auto 0;padding:14px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.1);display:flex;gap:8px;flex-wrap:wrap}
-.searchBox input,.searchBox select{flex:1;min-width:160px;padding:12px;border:1px solid #cbd5e1;border-radius:10px}
-.searchBox button{padding:12px 20px;background:#0a2a8a;color:#fff;border:0;border-radius:10px;font-weight:900;cursor:pointer}
-.jobs{max-width:900px;margin:20px auto;padding:0 12px;display:grid;gap:12px}
-.job{background:#fff;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:4px solid #0a2a8a}
-.coffeeF{position:fixed;bottom:18px;left:14px;z-index:99999;background:#FFDD00;color:#000;padding:12px 20px;border-radius:30px;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,.25);text-decoration:none;border:2px solid #000}
-</style><script>window.ADS_SLOT="1234567890"</script><link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#0f172a"></head><body>
-
-<div style="background:#25D366;color:white;text-align:center;padding:12px;font-family:Arial;position:relative;z-index:9999">
-  🔥 <b>500+ Jobs Daily on WhatsApp</b>
-  <a href="https://whatsapp.com/channel/0029VbDh9dGK5cDEn5Epcw0F"
-     style="background:white;color:#25D366;padding:6px 14px;border-radius:20px;text-decoration:none;font-weight:bold;margin-left:8px;display:inline-block">
-     📲 Follow Jobsa🇿🇦
-  </a>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
+body{background:#f6f7f9}
+.header{background:#111;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+.header a{color:#fff;text-decoration:none;margin-left:14px;font-size:14px}
+.hero{background:#111;color:#fff;padding:30px 20px;text-align:center}
+.search-box{background:#fff;max-width:800px;margin:20px auto;padding:14px;border-radius:14px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.search-box input,.search-box select{padding:12px;border:1px solid #ddd;border-radius:10px}
+.btn-search{background:#10b981;color:#fff;border:none;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}
+.jobs{max-width:900px;margin:auto;padding:15px}
+.card{background:#fff;border-radius:12px;padding:16px;margin:12px 0;border:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+.badge{font-size:11px;background:#eef2ff;padding:3px 8px;border-radius:20px}
+@media(max-width:700px){.search-box{grid-template-columns:1fr} .card{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><b>AstroJob SA</b></div>
+  <div><a href="/">Home</a><a href="/search">Advanced Search</a><a href="/post-job">Post Job R199</a><a href="/cv">CV Help</a></div>
 </div>
 
-<div id="astroHeader">
-  <div><a href="/" style="text-decoration:none"><b style="font-size:22px;color:#0a2a8a">🚀 Astro Job SA</b><br><small style="color:#00a651;font-weight:800;letter-spacing:2px;font-size:10px">MADE BY MTHEMBISI</small></a></div>
-  <div class="btns">
-    <a href="/cv" class="btnCV">📄 CV</a>
-    <a href="/post-job" class="btnPost">+ Post Job</a>
+<div class="hero">
+  <h1>Find Your Job in South Africa</h1>
+  <p style="opacity:.8;margin-top:6px">Verified jobs across all 9 provinces - browse all live results</p>
+  
+  <form class="search-box" action="/search" method="GET">
+    <input name="q" value="{{qq}}" placeholder="Job title, e.g. Driver Code 14, Teacher, Nurse">
+    <select name="loc">
+      <option value="">All SA (All Provinces)</option>
+      {% for p in provinces %}
+      <option value="{{p}}" {% if loc==p %}selected{% endif %}>{{p}}</option>
+      {% endfor %}
+    </select>
+    <select name="type">
+      <option value="">All Types</option>
+      <option value="permanent">Permanent</option>
+      <option value="contract">Contract</option>
+      <option value="parttime">Part-time</option>
+    </select>
+    <button class="btn-search">Search</button>
+  </form>
+  <div style="margin-top:12px;font-size:13px;opacity:.8">
+    <a href="/search" style="color:#10b981;text-decoration:none">Browse all live results</a> • 
+    <a href="/search" style="color:#10b981;text-decoration:none">Advanced search</a> • 
+    <a href="https://www.adzuna.co.za/jobs/advanced-search" target="_blank" style="color:#10b981;text-decoration:none">Adzuna Advanced</a>
   </div>
 </div>
-<div class="hero"><h1>Your Future Starts Here, Mzansi 🇿🇦</h1><p>Real verified jobs SA, no scams!</p></div>
-
-<!-- FIXED SEARCH: dream job + 9 provinces -->
-<form method="GET" class="searchBox">
-  <input name="q" value="{{qq}}" placeholder="Search dream job...">
-  <select name="loc">
-    <option value="">All South Africa</option>
-    <option value="Eastern Cape" {% if loc=='Eastern Cape' %}selected{% endif %}>Eastern Cape</option>
-    <option value="Free State" {% if loc=='Free State' %}selected{% endif %}>Free State</option>
-    <option value="Gauteng" {% if loc=='Gauteng' %}selected{% endif %}>Gauteng</option>
-    <option value="KwaZulu-Natal" {% if loc=='KwaZulu-Natal' %}selected{% endif %}>KwaZulu-Natal</option>
-    <option value="Limpopo" {% if loc=='Limpopo' %}selected{% endif %}>Limpopo</option>
-    <option value="Mpumalanga" {% if loc=='Mpumalanga' %}selected{% endif %}>Mpumalanga</option>
-    <option value="North West" {% if loc=='North West' %}selected{% endif %}>North West</option>
-    <option value="Northern Cape" {% if loc=='Northern Cape' %}selected{% endif %}>Northern Cape</option>
-    <option value="Western Cape" {% if loc=='Western Cape' %}selected{% endif %}>Western Cape</option>
-  </select>
-  <button>🔍 Search</button>
-</form>
-
-<!-- REMOVED 4 pills: Work From Home / Remote IT / Driver / Software -->
 
 <div class="jobs">
-{% for j in jobs %}
-<div class="job"><h3 style="margin:0 0 6px;color:#0a2a8a">{{j.title}}</h3><div style="font-size:12px;color:#64748b">🏢 {{j.company}} • 📍 {{j.location}}</div><div style="font-size:13px;margin-top:6px">{{j.desc}}...</div><div style="margin-top:10px"><a href="/apply/{{ j.slug }}" target="_blank" style="background:#0a2a8a;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:800">Apply →</a> <a href="https://wa.me/?text={{share_text}}%20https://astrojob-sa.onrender.com/apply/{{ j.title|lower|replace(' ', '-') }}-{{ j.company|lower|replace(' ', '-') }}" target="_blank" style="background:#22c55e;color:#000;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:800">WhatsApp</a></div></div>
-{% if loop.index % 3 == 0 %}
-<div style="margin:20px 0; min-height:100px; background:#fff; border-radius:12px; padding:10px">
-</div>
-{% endif %}
-{% endfor %}
+  <p style="color:#666;font-size:14px">{{jobs|length}} live jobs • Updated today</p>
+  {% for job in jobs %}
+  <div class="card">
+    <div>
+      <h3 style="font-size:16px">{{job.title}}</h3>
+      <p style="font-size:13px;color:#666">{{job.company}} • {{job.location}} <span class="badge">{{job.source}}</span></p>
+      <p style="font-size:12px;color:#888;margin-top:4px">{{job.desc}}</p>
+    </div>
+    <div style="text-align:right">
+      <a href="/apply/{{job.slug}}" style="background:#111;color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none;display:inline-block;font-size:14px">Apply Now</a>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
-<a href="https://www.buymeacoffee.com/astrojobsa" target="_blank" class="coffeeF">☕ Buy Me a Coffee</a>
-<div style="text-align:center;padding:18px;background:#0f172a;color:#94a3b8;font-size:12px;margin-top:30px">© 2026 Astro Job SA - Made by Mthembisi | <a href="/privacy" style="color:#e2e8f0">Privacy</a></div>
-<a href="https://whatsapp.com/channel/0029VbDh9dGK5cDEn5Epcw0F" style="position:fixed;bottom:85px;right:20px;background:#25D366;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3)">💬</a>
-</body></html>
+<footer style="text-align:center;padding:20px;color:#888;font-size:12px">
+<a href="/privacy">Privacy</a> | <a href="/ads.txt">ads.txt</a> | AstroJob SA 2026 - All SA Jobs
+</footer>
+</body>
+</html>
