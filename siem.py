@@ -72,6 +72,12 @@ def get_geo(ip):
             return r.get('latitude',-26.2041),r.get('longitude',28.0473),r.get('city','Unknown')
         return -26.2041,28.0473,"Unknown"
     except: return -26.2041,28.0473,"Soweto"
+def is_googlebot(ip, ua):
+    if ip.startswith("66.249.") or ip.startswith("66.102."):
+        if "Googlebot" in ua or "Google" in ua:
+            return True
+    return False
+
 def is_blacklisted(ip): return BLACKLIST.get(ip,{}).get('blocked_until',0) > time.time()
 def add_blacklist(ip, reason):
     now=time.time()
@@ -92,8 +98,10 @@ class ThreatIntel:
 @siem_bp.before_app_request
 def siem_logger():
     if request.path.startswith(('/siem','/api/threats','/api/security-logs','/api/honeypot','/static','/ads.txt','/robots.txt','/health','/api/honeypot/fp')): return
-    if request.path in ["/.env","/.git/config","/.git/HEAD","/wp-login.php","/wp-admin","/admin","/administrator","/phpmyadmin","/config.php","/backup.zip","/.aws/credentials","/upload.php","/file_upload.php","/shell.php","/cmd.php","/console.php","/test.php","/info.php"]: return
+    if request.path in ["/.env","/.git/config","/.git/HEAD","/wp-login.php","/wp-admin","/wpadmin","/admin","/administrator","/phpmyadmin","/config.php","/backup.zip","/.aws/credentials","/upload.php","/file_upload.php","/shell.php","/cmd.php","/console.php","/test.php","/info.php","/honeypot","/honeypot_logs","/.git/HEAD","/wp-login.php","/wp-admin","/admin","/administrator","/phpmyadmin","/config.php","/backup.zip","/.aws/credentials","/upload.php","/file_upload.php","/shell.php","/cmd.php","/console.php","/test.php","/info.php"]: return
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    if is_googlebot(ip, ua):
+        return
     if is_blacklisted(ip): return
     full=f"{request.path} {request.query_string.decode(errors='ignore')} {request.headers.get('User-Agent','')}"
     bad,reason=ThreatIntel.scan(full)
@@ -280,3 +288,9 @@ def honeypot_api():
         "creds": list(FAKE_CREDS)[-30:][::-1],
         "blacklist": sorted([{"ip":k,"count":v['count'],"last":str(datetime.fromtimestamp(v['last'], SAST)),"reasons":v['reasons'][-2:]} for k,v in BLACKLIST.items()], key=lambda x: x['count'], reverse=True)[:20]
     })
+@siem_bp.route('/wpadmin', methods=["GET","POST"])
+@siem_bp.route('/wp-admin.php', methods=["GET","POST"])
+@siem_bp.route('/administrator.php', methods=["GET","POST"])
+@siem_bp.route('/admin.php', methods=["GET","POST"])
+def honey_admin_typos():
+    return honey_admin()
