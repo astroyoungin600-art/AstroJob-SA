@@ -96,7 +96,10 @@ def post_job():
         return redirect("https://wa.me/27812602918?text=" + quote_plus(msg))
     return render_template("post_job.html")
 @app.route('/jobs/<slug>')
-def job_slug(slug): return render_template('job_seo.html',slug=slug,content=f"{slug} - SA 2026",title=slug.title())
+def job_slug(slug): 
+    title = slug.replace("-", " ").title()
+    content = f"{title} jobs in South Africa 2026. Verified {title} vacancies in Gauteng, WC, KZN. Astro Job SA screens via anti-phishing engine and SIEM monitoring 50+ queries daily. Tips: never pay upfront fee, verify company. Serving 684 users from Soweto. Contact astroyoungin600@gmail.com 0812602918."
+    return render_template('job_seo.html',slug=slug,content=content,title=title)
 @app.route('/privacy')
 def privacy_page(): return render_template("privacy.html")
 @app.route("/buymeacoffee")
