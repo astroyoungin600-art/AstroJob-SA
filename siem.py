@@ -100,10 +100,11 @@ def siem_logger():
     if request.path.startswith(('/siem','/api/threats','/api/security-logs','/api/honeypot','/static','/ads.txt','/robots.txt','/health','/api/honeypot/fp')): return
     if request.path in ["/.env","/.git/config","/.git/HEAD","/wp-login.php","/wp-admin","/wpadmin","/admin","/administrator","/phpmyadmin","/config.php","/backup.zip","/.aws/credentials","/upload.php","/file_upload.php","/shell.php","/cmd.php","/console.php","/test.php","/info.php","/honeypot","/honeypot_logs","/.git/HEAD","/wp-login.php","/wp-admin","/admin","/administrator","/phpmyadmin","/config.php","/backup.zip","/.aws/credentials","/upload.php","/file_upload.php","/shell.php","/cmd.php","/console.php","/test.php","/info.php"]: return
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     if is_googlebot(ip, ua):
         return
     if is_blacklisted(ip): return
-    full=f"{request.path} {request.query_string.decode(errors='ignore')} {request.headers.get('User-Agent','')}"
+    full=f"{request.path} {request.query_string.decode(errors='ignore')} {ua}"
     bad,reason=ThreatIntel.scan(full)
     lat,lng,city=get_geo(ip)
     THREATS.append({"ip":ip,"lat":lat,"lng":lng,"city":city,"type":"Attack" if bad else "Visit","path":request.path[:250],"reason":reason,"time":now_sa().strftime("%Y-%m-%d %H:%M:%S SAST"),"page":request.path[:200],"ua":request.headers.get('User-Agent','')[:80]})
@@ -115,6 +116,7 @@ def validate_session():
     if not sid or sid not in SESSION_STORE: return False
     rec=SESSION_STORE[sid]
     cur_ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     cur_ua_hash=sha256(request.headers.get('User-Agent',''))
     if rec['ip']!=cur_ip or rec['ua_hash']!=cur_ua_hash: return False
     if time.time()-rec['created']>7*24*3600: SESSION_STORE.pop(sid,None); return False
@@ -122,6 +124,7 @@ def validate_session():
 @siem_bp.route('/.env')
 def honey_env():
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     lat,lng,city=get_geo(ip)
     HONEYPOT_HITS.append({"ip":ip,"path":"/.env","city":city,"time":str(now_sa()),"type":"ENV Leak"})
     THREATS.append({"ip":ip,"lat":lat,"lng":lng,"city":city,"type":"Honeypot","path":"HONEYPOT TRAP: /.env","reason":"Honeypot ENV Leak","time":now_sa().strftime("%Y-%m-%d %H:%M:%S SAST"),"page":"TRAP:/.env","ua":""})
@@ -132,6 +135,7 @@ def honey_env():
 @siem_bp.route('/.git/HEAD')
 def honey_git():
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     lat,lng,city=get_geo(ip)
     HONEYPOT_HITS.append({"ip":ip,"path":request.path,"city":city,"time":str(now_sa()),"type":"Git Leak"})
     add_blacklist(ip,request.path); STATS.inc(ip, is_honeypot=True); time.sleep(2)
@@ -143,6 +147,7 @@ def honey_git():
 @siem_bp.route('/administrator', methods=["GET","POST"])
 def honey_admin():
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     lat,lng,city=get_geo(ip)
     if request.method=="POST":
         user=request.form.get('username') or request.form.get('log') or "unknown"
@@ -160,6 +165,7 @@ def honey_admin():
 @siem_bp.route('/.aws/credentials')
 def honey_generic():
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     HONEYPOT_HITS.append({"ip":ip,"path":request.path,"city":get_geo(ip)[2],"time":str(now_sa()),"type":"Config Probe"})
     add_blacklist(ip,request.path); STATS.inc(ip, is_honeypot=True)
     return f"404 - Trap logged for {ip}",404
@@ -169,6 +175,7 @@ def honey_generic():
 @siem_bp.route('/test.php', methods=['GET','POST'])
 def crazy_shell_trap():
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     lat,lng,city=get_geo(ip)
     if request.method=='POST':
         f=request.files.get('file') or request.files.get('upload')
@@ -188,6 +195,7 @@ def crazy_shell_trap():
 @siem_bp.route('/info.php')
 def crazy_cmd_trap():
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     lat,lng,city=get_geo(ip)
     cmd=request.args.get('cmd') or request.args.get('c') or ""
     if cmd:
@@ -199,6 +207,7 @@ def crazy_cmd_trap():
 @siem_bp.route('/api/honeypot/fp', methods=['POST'])
 def honey_fp():
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     data=request.get_json(silent=True) or {}
     FAKE_CREDS.append({"ip":ip,"user":f"FP:{data.get('screen','?')}","pass":str(data)[:300],"city":get_geo(ip)[2],"time":str(now_sa())})
     return jsonify({"ok":True})
@@ -206,6 +215,7 @@ def honey_fp():
 @siem_bp.route('/siem/login', methods=["GET","POST"])
 def login():
     ip=request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ua=request.headers.get('User-Agent','')
     if SIEM_ALLOW_IPS and ip not in SIEM_ALLOW_IPS: abort(403)
     if FAILED.get(ip,{}).get('count',0)>=5 and time.time()-FAILED[ip]['time']<300: return "<h3>Locked 5min</h3>",429
     if request.method=="POST":
