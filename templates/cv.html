@@ -2,31 +2,7 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CV Builder - 10 Designs FREE | AstroJobSA</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
-body{background:#f5f7fb}
-.top{padding:12px 16px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid #eee}
-input,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0;font-size:14px}
-textarea{min-height:80px}
-.btn{background:#1e3a8a;color:#fff;padding:12px 18px;border-radius:12px;border:none;font-weight:800;cursor:pointer;width:100%;margin-top:8px}
-.btn-green{background:#22c55e;color:#111}
-.btn-red{background:#111;color:#fff}
-.badge{font-size:11px;background:#dcfce7;color:#166534;padding:5px 10px;border-radius:20px;font-weight:700;display:inline-block}
-.form-wrap{max-width:1100px;margin:14px auto;padding:0 14px;display:grid;grid-template-columns:380px 1fr;gap:14px}
-@media(max-width:800px){.form-wrap{grid-template-columns:1fr}}
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
-.tpl-btn{padding:8px 2px;border:2px solid #e2e8f0;border-radius:10px;font-size:10px;font-weight:800;cursor:pointer;background:#fff;text-align:center}
-.tpl-btn.active{border-color:#1e3a8a;background:#1e3a8a;color:#fff}
-#cv-preview{background:#fff;max-width:800px;margin:0 auto;padding:40px;box-shadow:0 10px 30px rgba(0,0,0,.15);border-radius:4px;min-height:900px}
-.cv-name{font-size:28px;font-weight:900;text-transform:uppercase;word-break:break-word}
-.cv-contact{font-size:11px;color:#555;text-align:right;float:right;line-height:1.4;word-break:break-all;max-width:45%}
-.cv-title{color:#2563eb;font-weight:800;font-size:13px;letter-spacing:1px;margin-top:6px;text-transform:uppercase}
-.cv-line{height:4px;background:#111;margin:14px 0 18px;clear:both}
-.cv-section{margin:18px 0}
-.cv-section h4{font-size:11px;letter-spacing:1.5px;font-weight:900;text-transform:uppercase;background:#111;color:#fff;display:inline-block;padding:4px 10px;border-radius:20px;margin-bottom:8px}
-.cv-text{font-size:13px;color:#333;line-height:1.5;white-space:pre-wrap}
-</style>
+<link rel="stylesheet" href="/static/style.css">
 </head><body>
 <div class="top"><a href="/" style="text-decoration:none;color:#666">← Back</a><span class="badge">10 Designs FREE • Private</span></div>
 <div class="form-wrap">
@@ -96,4 +72,55 @@ function downloadPDF(){
   doc.save(`${name.replace(/ /g,'_')}_CV_Template${curTpl}.pdf`);
 }
 load();
-</script></body></html>
+</script><a class="coffee-hang" href="https://www.buymeacoffee.com/astrojobsa" target="_blank" rel="noopener">☕ Buy Me a Coffee</a>
+
+<!-- FUN -->
+<button class="party-btn" onclick="toggleParty(this)">🎉 Party Mode</button>
+<div class="float-emoji" style="left:12px">🚀</div>
+<div class="float-emoji" style="right:12px;animation-delay:1s">💼</div>
+<script>
+function toggleParty(btn){
+  document.body.classList.toggle('party');
+  btn.classList.toggle('active');
+  btn.textContent = document.body.classList.contains('party') ? '✨ Party ON - Tap to Stop' : '🎉 Party Mode';
+  if(document.body.classList.contains('party')) confetti();
+}
+function confetti(){
+  const emojis=['🎉','✨','💰','🚀','💼','🌟','🎊','🔥'];
+  for(let i=0;i=0;i<24;i++){
+    let s=document.createElement('div'); s.className='confetti'; s.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left=Math.random()*100+'vw'; s.style.animationDuration=(Math.random()*2+2)+'s'; s.style.animationDelay=(Math.random()*0.5)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),4000);
+  }
+}
+// Confetti when you click Apply
+document.addEventListener('click',e=>{
+  if(e.target.closest('.btn-apply')) confetti();
+  if(e.target.closest('.coffee-hang')) confetti();
+});
+// Fun motivation every 30 sec
+const quotes=['🔥 You got this! Your next job is waiting.','💰 Soweto to Sandton - you deserve it!','🚀 One Apply = One step closer!','⭐ Mthembisi believes in you!'];
+setInterval(()=>{ if(Math.random()>0.5) alert(quotes[Math.floor(Math.random()*quotes.length)]) },60000);
+</script>
+
+<!-- Light/Dark Toggle -->
+<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+<script>
+function toggleTheme(){
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('astroTheme', isDark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
+}
+// Load saved choice on every page - default LIGHT
+(function(){
+  const saved = localStorage.getItem('astroTheme');
+  if(saved === 'dark'){
+    document.body.classList.add('dark');
+    const b = document.getElementById('themeBtn');
+    if(b) b.textContent = '☀️ Light';
+  }
+})();
+</script>
+</body>
+
+</html>

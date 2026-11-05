@@ -11,4 +11,55 @@
 <p>Looking for {{ title }} in 2026? Astro Job SA updates daily with verified employers. Johannesburg, Pretoria, Cape Town, Durban, Remote. Requirements: Matric + relevant qualification. Benefits: medical aid, pension, growth.</p>
 <p>Top companies: Shoprite, Woolworths, Transnet, Eskom, Capitec, Discovery, government DPSA.</p>
 <div style="text-align:center;margin:24px"><a href="/apply/{{ slug }}" style="background:#0a2a8a;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:900;display:inline-block">Apply on External Company Site →</a></div>
-</body></html>
+<a class="coffee-hang" href="https://www.buymeacoffee.com/astrojobsa" target="_blank" rel="noopener">☕ Buy Me a Coffee</a>
+
+<!-- FUN -->
+<button class="party-btn" onclick="toggleParty(this)">🎉 Party Mode</button>
+<div class="float-emoji" style="left:12px">🚀</div>
+<div class="float-emoji" style="right:12px;animation-delay:1s">💼</div>
+<script>
+function toggleParty(btn){
+  document.body.classList.toggle('party');
+  btn.classList.toggle('active');
+  btn.textContent = document.body.classList.contains('party') ? '✨ Party ON - Tap to Stop' : '🎉 Party Mode';
+  if(document.body.classList.contains('party')) confetti();
+}
+function confetti(){
+  const emojis=['🎉','✨','💰','🚀','💼','🌟','🎊','🔥'];
+  for(let i=0;i=0;i<24;i++){
+    let s=document.createElement('div'); s.className='confetti'; s.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left=Math.random()*100+'vw'; s.style.animationDuration=(Math.random()*2+2)+'s'; s.style.animationDelay=(Math.random()*0.5)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),4000);
+  }
+}
+// Confetti when you click Apply
+document.addEventListener('click',e=>{
+  if(e.target.closest('.btn-apply')) confetti();
+  if(e.target.closest('.coffee-hang')) confetti();
+});
+// Fun motivation every 30 sec
+const quotes=['🔥 You got this! Your next job is waiting.','💰 Soweto to Sandton - you deserve it!','🚀 One Apply = One step closer!','⭐ Mthembisi believes in you!'];
+setInterval(()=>{ if(Math.random()>0.5) alert(quotes[Math.floor(Math.random()*quotes.length)]) },60000);
+</script>
+
+<!-- Light/Dark Toggle -->
+<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+<script>
+function toggleTheme(){
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('astroTheme', isDark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
+}
+// Load saved choice on every page - default LIGHT
+(function(){
+  const saved = localStorage.getItem('astroTheme');
+  if(saved === 'dark'){
+    document.body.classList.add('dark');
+    const b = document.getElementById('themeBtn');
+    if(b) b.textContent = '☀️ Light';
+  }
+})();
+</script>
+</body>
+
+</html>

@@ -1,65 +1,115 @@
-{% extends "index.html" %}
-{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Advanced Search - Astro Job SA</title>
+<link rel="stylesheet" href="/static/style.css">
 <style>
-.filter-bar{background:#fff;padding:15px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin:15px 0}
-.filter-bar input,.filter-bar select{padding:10px;border:1px solid #ddd;border-radius:8px;width:100%;margin:5px 0}
-.btn-green{background:#10b981;color:#fff;padding:12px 20px;border:none;border-radius:8px;width:100%;font-weight:700}
-.job-card{border:1px solid #eee;border-radius:12px;padding:15px;margin:10px 0;background:#fff}
+.search-page{max-width:920px;margin:auto;padding:16px 14px 120px}
+.search-page h1{font-size:26px;font-weight:900;letter-spacing:-.5px}
+.search-page .sub{color:#6B7280;font-size:13px;margin:6px 0 14px}
+.search-form{background:#fff;border:1px solid #E5E7EB;border-radius:22px;padding:18px;box-shadow:0 20px 40px rgba(15,23,42,.08)}
+.search-form .row{display:flex;gap:10px;flex-wrap:wrap}
+.search-form input,.search-form select{flex:1;min-width:140px;padding:14px;border:2px solid #111827;border-radius:14px;font-size:15px;font-weight:600;background:#fff}
+.search-form select{background:#F3F4F6;border:1px solid #E5E7EB}
+.search-form .btn-search{width:100%;margin-top:12px}
+.search-meta{color:#6B7280;font-size:13px;font-weight:600;margin:16px 2px}
+.top-links{margin-top:12px;display:flex;gap:12px;font-size:13px;font-weight:700}
 </style>
+</head>
+<body>
+<div class="header">
+  <div class="logo"><b>🚀 Astro Job<br>SA</b><small>MADE BY MTHEMBISI</small></div>
+  <div class="btns"><a class="btn-cv" href="/cv">📄<br>CV</a><a class="btn-post" href="/post-job">+ Post<br>Job</a></div>
+</div>
 
-<div style="max-width:900px;margin:auto;padding:15px">
-<h2 style="margin:10px 0">🔍 Advanced Search - All SA Jobs</h2>
-<p style="color:#666">Browse all live results across South Africa - like Adzuna but on AstroJob SA</p>
+<div class="search-page">
+  <h1>🔍 Advanced Search - All SA Jobs</h1>
+  <p class="sub">Browse all live results across South Africa - like Adzuna but on AstroJob SA</p>
 
-<form class="filter-bar" action="/search" method="GET">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    <input name="q" value="{{qq}}" placeholder="Job title, e.g. Driver Code 14">
-    <select name="loc">
-      <option value="">All Provinces (All SA)</option>
-      {% for prov in provinces %}
-      <option value="{{prov}}" {% if loc==prov %}selected{% endif %}>{{prov}}</option>
-      {% endfor %}
-    </select>
-    <select name="type">
-      <option value="">All Types</option>
-      <option value="permanent" {% if type=='permanent' %}selected{% endif %}>Permanent</option>
-      <option value="contract" {% if type=='contract' %}selected{% endif %}>Contract</option>
-      <option value="parttime" {% if type=='parttime' %}selected{% endif %}>Part-time</option>
-    </select>
-    <select name="salary">
-      <option value="">Any Salary</option>
-      <option value="10000">R10k+ per month</option>
-      <option value="20000">R20k+ per month</option>
-      <option value="30000">R30k+ per month</option>
-    </select>
+  <form class="search-form" action="/search" method="GET">
+    <div class="row">
+      <input name="q" value="{{qq}}" placeholder="🔍 Cybersecurity, Driver, Cashier...">
+      <select name="loc">
+        <option value="">All Provinces (All SA)</option>
+        {% for p in provinces %}<option value="{{p}}" {% if loc==p %}selected{% endif %}>{{p}}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <select name="type"><option value="">All Types</option><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Remote</option></select>
+      <select name="salary"><option value="">Any Salary</option><option value="10000">R10k+</option><option value="20000">R20k+</option><option value="30000">R30k+</option></select>
+    </div>
+    <button class="btn-search" type="submit">Search All Live Jobs →</button>
+    <div class="top-links"><a href="/search">Browse all live results</a><span>|</span><a href="/">Return to home</a></div>
+  </form>
+
+  <p class="search-meta">{{jobs|length}} live jobs found for "{{qq}}"</p>
+
+  <div class="jobs" style="padding:0">
+    {% for job in jobs %}
+    <div class="card">
+      <h3>{{job.title}}</h3>
+      <p style="color:#6B7280;margin:5px 0">{{job.company}} • {{job.location}} <span class="badge">{{job.source}}</span></p>
+      <p style="color:#6B7280">{{job.desc}}</p>
+      <a class="btn-apply" href="{{ job.url }}" target="_blank" rel="noopener">Apply → {{job.company}}</a>
+    </div>
+    {% endfor %}
   </div>
-  <button class="btn-green" style="margin-top:10px">Search All Live Jobs →</button>
-  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-    <a href="/search" style="font-size:13px;color:#10b981">Browse all live results</a> |
-    <a href="https://www.adzuna.co.za/jobs/advanced-search" target="_blank" style="font-size:13px;color:#10b981">Adzuna Advanced Search</a> |
-    <a href="/" style="font-size:13px">Return to home</a>
-  </div>
-</form>
-
-<p style="margin:15px 0;color:#666">{{jobs|length}} live jobs found {% if qq %}for "{{qq}}"{% endif %} {% if loc %}in {{loc}}{% endif %}</p>
-
-{% for job in jobs %}
-<div class="job-card">
-  <h3 style="margin:0 0 5px">{{job.title}}</h3>
-  <p style="margin:0;color:#666;font-size:14px">{{job.company}} • {{job.location}} • {{job.source}}</p>
-  <p style="font-size:13px;color:#444;margin:8px 0">{{job.desc}}</p>
-  <a href="/apply/{{job.slug}}" style="background:#111;color:#fff;padding:8px 14px;border-radius:8px;display:inline-block;text-decoration:none;font-size:14px">Apply → {{job.company}}</a>
-  <a href="https://www.adzuna.co.za/search?q={{job.title|urlencode}}" target="_blank" style="margin-left:8px;font-size:13px;color:#10b981">View on Adzuna</a>
 </div>
-{% endfor %}
 
-{% if not jobs %}
-<div style="text-align:center;padding:30px;background:#fff;border-radius:12px">
-<p>We cannot find the page you're looking for? Try:</p>
-<a href="/" style="color:#10b981">Return to home</a><br>
-<a href="/search" style="color:#10b981">Browse all live results across South Africa</a><br>
-<a href="/search" style="color:#10b981">Advanced search</a>
-</div>
-{% endif %}
-</div>
-{% endblock %}
+<div class="footer">© 2026 Astro Job SA — Made by Mthembisi | Mzansi's Trusted Job Hub 🇿🇦</div>
+<a class="coffee-hang" href="https://www.buymeacoffee.com/astrojobsa" target="_blank">☕ Buy Me a Coffee</a>
+<a class="whatsapp-float" href="https://whatsapp.com/channel/0029Vb6J4zX9hXEy9q2uA40b" target="_blank">💬</a>
+
+<!-- FUN -->
+<button class="party-btn" onclick="toggleParty(this)">🎉 Party Mode</button>
+<div class="float-emoji" style="left:12px">🚀</div>
+<div class="float-emoji" style="right:12px;animation-delay:1s">💼</div>
+<script>
+function toggleParty(btn){
+  document.body.classList.toggle('party');
+  btn.classList.toggle('active');
+  btn.textContent = document.body.classList.contains('party') ? '✨ Party ON - Tap to Stop' : '🎉 Party Mode';
+  if(document.body.classList.contains('party')) confetti();
+}
+function confetti(){
+  const emojis=['🎉','✨','💰','🚀','💼','🌟','🎊','🔥'];
+  for(let i=0;i=0;i<24;i++){
+    let s=document.createElement('div'); s.className='confetti'; s.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left=Math.random()*100+'vw'; s.style.animationDuration=(Math.random()*2+2)+'s'; s.style.animationDelay=(Math.random()*0.5)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),4000);
+  }
+}
+// Confetti when you click Apply
+document.addEventListener('click',e=>{
+  if(e.target.closest('.btn-apply')) confetti();
+  if(e.target.closest('.coffee-hang')) confetti();
+});
+// Fun motivation every 30 sec
+const quotes=['🔥 You got this! Your next job is waiting.','💰 Soweto to Sandton - you deserve it!','🚀 One Apply = One step closer!','⭐ Mthembisi believes in you!'];
+setInterval(()=>{ if(Math.random()>0.5) alert(quotes[Math.floor(Math.random()*quotes.length)]) },60000);
+</script>
+
+<!-- Light/Dark Toggle -->
+<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+<script>
+function toggleTheme(){
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('astroTheme', isDark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
+}
+// Load saved choice on every page - default LIGHT
+(function(){
+  const saved = localStorage.getItem('astroTheme');
+  if(saved === 'dark'){
+    document.body.classList.add('dark');
+    const b = document.getElementById('themeBtn');
+    if(b) b.textContent = '☀️ Light';
+  }
+})();
+</script>
+</body>
+
+
+</html>

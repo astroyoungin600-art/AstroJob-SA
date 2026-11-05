@@ -3,20 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Post a Job - AstroJob SA | 20k Job Seekers</title>
-<style>
-body{font-family:system-ui;background:#f6f7f9;margin:0;padding:16px}
-.card{max-width:750px;margin:auto;background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
-.tiers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:18px 0}
-@media(max-width:700px){.tiers{grid-template-columns:1fr}}
-.tier{border:2px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center}
-.tier.featured{border-color:#f59e0b;background:#fffbeb;transform:scale(1.03)}
-.price{font-size:26px;font-weight:800}
-.btn{width:100%;padding:12px;border:0;border-radius:10px;font-weight:700;cursor:pointer;margin-top:10px}
-.btn-green{background:#25D366;color:#fff}
-.btn-dark{background:#111827;color:#fff}
-input,textarea,select{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;margin:6px 0;box-sizing:border-box}
-label{font-weight:600;font-size:14px;margin-top:8px;display:block}
-</style>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <div class="card">
@@ -48,5 +35,56 @@ label{font-weight:600;font-size:14px;margin-top:8px;display:block}
 
 <p style="text-align:center;margin-top:14px"><a href="/">← Back to jobs</a></p>
 </div>
+<a class="coffee-hang" href="https://www.buymeacoffee.com/astrojobsa" target="_blank" rel="noopener">☕ Buy Me a Coffee</a>
+
+<!-- FUN -->
+<button class="party-btn" onclick="toggleParty(this)">🎉 Party Mode</button>
+<div class="float-emoji" style="left:12px">🚀</div>
+<div class="float-emoji" style="right:12px;animation-delay:1s">💼</div>
+<script>
+function toggleParty(btn){
+  document.body.classList.toggle('party');
+  btn.classList.toggle('active');
+  btn.textContent = document.body.classList.contains('party') ? '✨ Party ON - Tap to Stop' : '🎉 Party Mode';
+  if(document.body.classList.contains('party')) confetti();
+}
+function confetti(){
+  const emojis=['🎉','✨','💰','🚀','💼','🌟','🎊','🔥'];
+  for(let i=0;i=0;i<24;i++){
+    let s=document.createElement('div'); s.className='confetti'; s.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left=Math.random()*100+'vw'; s.style.animationDuration=(Math.random()*2+2)+'s'; s.style.animationDelay=(Math.random()*0.5)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),4000);
+  }
+}
+// Confetti when you click Apply
+document.addEventListener('click',e=>{
+  if(e.target.closest('.btn-apply')) confetti();
+  if(e.target.closest('.coffee-hang')) confetti();
+});
+// Fun motivation every 30 sec
+const quotes=['🔥 You got this! Your next job is waiting.','💰 Soweto to Sandton - you deserve it!','🚀 One Apply = One step closer!','⭐ Mthembisi believes in you!'];
+setInterval(()=>{ if(Math.random()>0.5) alert(quotes[Math.floor(Math.random()*quotes.length)]) },60000);
+</script>
+
+<!-- Light/Dark Toggle -->
+<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+<script>
+function toggleTheme(){
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('astroTheme', isDark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
+}
+// Load saved choice on every page - default LIGHT
+(function(){
+  const saved = localStorage.getItem('astroTheme');
+  if(saved === 'dark'){
+    document.body.classList.add('dark');
+    const b = document.getElementById('themeBtn');
+    if(b) b.textContent = '☀️ Light';
+  }
+})();
+</script>
 </body>
+
+
 </html>
