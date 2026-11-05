@@ -108,3 +108,31 @@ body.dark .theme-toggle { background: #1E293B; color: #fff; border-color: #fff; 
   backdrop-filter:blur(12px) !important;
   border-bottom:1px solid rgba(255,255,255,.6) !important;
 }
+
+/* --- SIEM REAL FIX - matches siem_globe.html --- */
+/* SIEM cards - 30s colour cycle */
+.grid{ display:grid !important; grid-template-columns:repeat(3,1fr) !important; gap:10px !important; }
+.grid .card{
+  animation: astroColorCycle 30s linear infinite !important;
+  color:#fff !important; border:none !important; border-radius:14px !important;
+  padding:14px !important; text-align:center !important; font-weight:900 !important;
+}
+.grid .card b{ display:block !important; font-size:28px !important; color:#fff !important; }
+.grid .card .green, .grid .card .red, .grid .card .yellow{ color:#fff !important; }
+
+/* SIEM tables - futuristic */
+table{ width:100% !important; border-collapse:collapse !important; background:#fff !important; border-radius:12px !important; overflow:hidden !important; margin:10px 0 18px !important; }
+table th{
+  animation: astroColorCycle 30s linear infinite !important;
+  color:#fff !important; padding:10px 8px !important; font-size:13px !important; text-align:left !important;
+}
+table td{ padding:9px 8px !important; border-bottom:1px solid #E5E7EB !important; font-size:13px !important; word-break:break-all !important; }
+
+/* Badges - keep meaning but glow */
+.badge{ padding:4px 10px !important; border-radius:999px !important; font-weight:900 !important; font-size:11px !important; color:#fff !important; }
+.badge.high{ background:#FF0080 !important; box-shadow:0 0 12px #FF0080 !important; animation: neonPulse 3s ease-in-out infinite !important; }
+.badge.med{ background:#FF8A00 !important; box-shadow:0 0 12px #FF8A00 !important; }
+.badge.low{ background:#00B0FF !important; box-shadow:0 0 12px #00B0FF !important; }
+
+/* SIEM headings - rainbow */
+h2, h3{ background:linear-gradient(90deg,#FF0080,#FFD600,#00E676,#00B0FF,#7C4DFF) !important; -webkit-background-clip:text !important; background-clip:text !important; color:transparent !important; }
