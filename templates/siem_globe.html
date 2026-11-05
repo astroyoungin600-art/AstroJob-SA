@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="/static/style.css"></head>
 <body><h2>🛡️ SIEM v4.0 ADVANCED <span style="font-size:12px;color:#22c55e">LIVE</span></h2><p id="time"></p>
 <div class="grid">
-<div class="card">Total<b id="total">0</b></div><div class="card">Visits<b id="visits" class="green">0</b></div><div class="card">Attacks<b id="blocked" class="red">0</b></div><div class="card">Honeypot<b id="honey" class="yellow">0</b></div><div class="card">Malware<b id="mal" class="red">0</b></div><div class="card">Blacklisted<b id="black">0</b></div>
+<div class="card">Total<b id="total">0</b></div><div class="card">Visits<b id="visits" class="green">0</b></div><div class="card">Attacks<b id="blocked" class="red">0</b></div><div class="card">Honeypot<b id="honey" class="yellow">0</b></div><div class="card">Malware<b id="malCount" class="red">0</b></div><div class="card">Blacklisted<b id="black">0</b></div>
 </div>
 <h3>🔥 Top Threat Scores (Behavioural)</h3><table><thead><tr><th>IP</th><th>City</th><th>Score</th><th>Risk</th></tr></thead><tbody id="scores"></tbody></table>
 <h3>⚠️ Recent Attacks</h3><table><thead><tr><th>IP</th><th>Reason</th><th>City</th><th>Score</th><th>Time</th></tr></thead><tbody id="mal"></tbody></table>
@@ -15,7 +15,7 @@ async function load(){
   document.getElementById('visits').textContent=d.visits_ever;
   document.getElementById('blocked').textContent=d.blocked;
   document.getElementById('honey').textContent=d.honeypot_ever;
-  document.getElementById('mal').textContent=d.malware_ever;
+  document.getElementById('malCount').textContent=d.malware_ever;
   document.getElementById('black').textContent=d.blacklist||0;
   document.getElementById('time').textContent=d.server_time+' | v'+d.version;
   document.getElementById('scores').innerHTML=(d.top_scores||[]).map(s=>`<tr><td>${s.ip}</td><td>${s.city}</td><td>${s.score}</td><td><span class="badge ${s.score>=80?'high':s.score>=40?'med':'low'}">${s.score>=80?'CRITICAL':s.score>=40?'MEDIUM':'LOW'}</span></td></tr>`).join('')||'<tr><td colspan=4>No threats yet</td></tr>';
@@ -72,6 +72,6 @@ function toggleTheme(){
   }
 })();
 </script>
-</body>
+<script>function coffeeToggle(){document.querySelectorAll(".coffee-hang").forEach(b=>b.classList.toggle("open"))} document.addEventListener("click",e=>{let b=e.target.closest(".coffee-hang"); if(b){e.preventDefault(); if(!b.classList.contains("open")){b.classList.add("open"); return} window.open(b.href,"_blank")}})</script></body>
 
 </html>

@@ -125,7 +125,7 @@ function toggleTheme(){
   }
 })();
 </script>
-</body>
+<script>function coffeeToggle(){document.querySelectorAll(".coffee-hang").forEach(b=>b.classList.toggle("open"))} document.addEventListener("click",e=>{let b=e.target.closest(".coffee-hang"); if(b){e.preventDefault(); if(!b.classList.contains("open")){b.classList.add("open"); return} window.open(b.href,"_blank")}})</script></body>
 
 
 </html>

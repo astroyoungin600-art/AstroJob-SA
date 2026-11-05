@@ -138,3 +138,41 @@ table td{ padding:9px 8px !important; border-bottom:1px solid #E5E7EB !important
 h2, h3{ background:linear-gradient(90deg,#FF0080,#FFD600,#00E676,#00B0FF,#7C4DFF) !important; -webkit-background-clip:text !important; background-clip:text !important; color:transparent !important; }
 
 /* SIEM Intel - reuse cycle */
+
+/* --- SIEM PROFESSIONAL - overrides rainbow --- */
+.grid .card, table th, h2, h3{
+  animation:none !important;
+  background:#0F172A !important;
+  -webkit-background-clip:border-box !important;
+  background-clip:border-box !important;
+  color:#fff !important;
+  text-shadow:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+}
+.grid .card{ background:#1E293B !important; border:1px solid #334155 !important; border-left:4px solid #0EA5E9 !important; border-radius:10px !important; overflow:hidden !important; }
+.grid .card:nth-child(3){ border-left-color:#EF4444 !important; }
+.grid .card:nth-child(4){ border-left-color:#F59E0B !important; }
+.grid .card:nth-child(5){ border-left-color:#DC2626 !important; }
+.grid .card:nth-child(6){ border-left-color:#64748B !important; }
+.grid .card b{ font-size:22px !important; line-height:1.1 !important; word-break:break-word !important; overflow:hidden !important; white-space:normal !important; max-height:44px !important; }
+table th{ background:#0F172A !important; }
+table td{ color:#0F172A !important; }
+.badge.high{ background:#DC2626 !important; box-shadow:none !important; animation:none !important; }
+.badge.med{ background:#F59E0B !important; box-shadow:none !important; }
+.badge.low{ background:#0EA5E9 !important; box-shadow:none !important; }
+body{ background:#F1F5F9 !important; }
+
+/* --- BUY ME COFFEE - TOGGLE --- */
+.coffee-hang{
+  position:fixed !important; bottom:18px !important; left:14px !important;
+  z-index:9999 !important; width:52px !important; height:52px !important;
+  border-radius:50% !important; overflow:hidden !important; white-space:nowrap !important;
+  background:#FFDD00 !important; color:#000 !important; font-size:22px !important;
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  text-decoration:none !important; box-shadow:0 4px 14px rgba(0,0,0,.25) !important;
+  transition:width .3s, border-radius .3s !important;
+}
+.coffee-hang::after{ content:"☕" !important; }
+.coffee-hang.open{ width:190px !important; border-radius:999px !important; font-size:14px !important; font-weight:900 !important; }
+.coffee-hang.open::after{ content:"☕ Buy Me a Coffee" !important; }
