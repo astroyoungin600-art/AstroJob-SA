@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><title>SIEM Threat Intel Dashboard</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/static/style.css">
+<style>body{padding:14px;font-family:Arial} .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px} .grid .card{animation:astroColorCycle 30s linear infinite!important;color:#fff!important;border:none!important;border-radius:14px!important;padding:14px!important;text-align:center!important;font-weight:900!important} .grid .card b{display:block;font-size:28px;color:#fff!important} table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;margin:10px 0 18px} th{animation:astroColorCycle 30s linear infinite!important;color:#fff!important;padding:10px 8px;text-align:left} td{padding:9px 8px;border-bottom:1px solid #E5E7EB;font-size:13px;word-break:break-all} .badge{padding:4px 10px;border-radius:999px;font-weight:900;font-size:11px;color:#fff} .high{background:#FF0080} .med{background:#FF8A00} .low{background:#00B0FF} .bar{height:10px;border-radius:999px;background:#E5E7EB;overflow:hidden} .bar i{display:block;height:100%;animation:astroColorCycle 30s linear infinite!important}</style></head>
+<body><h2>🧠 SIEM THREAT INTEL <span style="font-size:12px;color:#22c55e">LIVE</span></h2><p id="time"></p><p><a href="/siem">← Back to SIEM</a> | <a href="/">Home</a> | Auto-refresh 5s</p>
+<div class="grid"><div class="card">Total Intel<b id="total">0</b></div><div class="card">Unique IPs<b id="ips">0</b></div><div class="card">Countries<b id="countries">0</b></div><div class="card">Top Attack<b id="topAttack">-</b></div><div class="card">Top Country<b id="topCountry">-</b></div><div class="card">Risk Level<b id="risk">LOW</b></div></div>
+<h3>🌍 Top Countries</h3><table><thead><tr><th>Country / City</th><th>Attacks</th><th>Share</th></tr></thead><tbody id="byCountry"></tbody></table>
+<h3>🎯 Top Attack Types</h3><table><thead><tr><th>Signature</th><th>Count</th><th>Severity</th><th>Share</th></tr></thead><tbody id="byType"></tbody></table>
+<h3>🔍 Top IOCs - Malicious IPs</h3><table><thead><tr><th>IP</th><th>City</th><th>Score</th><th>Risk</th><th>Last Seen</th></tr></thead><tbody id="iocs"></tbody></table>
+<h3>📦 Top Targeted Paths</h3><table><thead><tr><th>Path</th><th>Hits</th><th>Share</th></tr></thead><tbody id="byPath"></tbody></table>
+<h3>🧬 Device Fingerprints Banned</h3><table><thead><tr><th>Fingerprint</th><th>IP</th><th>Score</th><th>Status</th></tr></thead><tbody id="fps"></tbody></table>
+<script>
+async function load(){
+let r=await fetch('/api/threat-intel'); let d=await r.json();
+document.getElementById('total').textContent=d.total||0;
+document.getElementById('ips').textContent=d.unique_ips||0;
+document.getElementById('countries').textContent=(d.by_country||[]).length;
+document.getElementById('topAttack').textContent=(d.by_type[0]?.name||'-');
+document.getElementById('topCountry').textContent=(d.by_country[0]?.name||'-');
+document.getElementById('risk').textContent=d.risk||'LOW';
+document.getElementById('time').textContent=d.server_time||'';
+let mkBar=(p)=>`<div class="bar"><i style="width:${p}%"></i></div>`;
+document.getElementById('byCountry').innerHTML=(d.by_country||[]).map(x=>`<tr><td>${x.name}</td><td>${x.count}</td><td>${x.pct}% ${mkBar(x.pct)}</td></tr>`).join('')||'<tr><td colspan=3>No data yet</td></tr>';
+document.getElementById('byType').innerHTML=(d.by_type||[]).map(x=>`<tr><td>${x.name}</td><td>${x.count}</td><td><span class="badge ${x.count>=20?'high':x.count>=5?'med':'low'}">${x.count>=20?'CRITICAL':x.count>=5?'MEDIUM':'LOW'}</span></td><td>${x.pct}% ${mkBar(x.pct)}</td></tr>`).join('')||'<tr><td colspan=4>No data yet</td></tr>';
+document.getElementById('iocs').innerHTML=(d.iocs||[]).map(x=>`<tr><td>${x.ip}</td><td>${x.city}</td><td>${x.score}</td><td><span class="badge ${x.score>=80?'high':x.score>=40?'med':'low'}">${x.score>=80?'CRITICAL':x.score>=40?'MEDIUM':'LOW'}</span></td><td>${x.last}</td></tr>`).join('')||'<tr><td colspan=5>No threats yet</td></tr>';
+document.getElementById('byPath').innerHTML=(d.by_path||[]).map(x=>`<tr><td>${x.name}</td><td>${x.count}</td><td>${x.pct}% ${mkBar(x.pct)}</td></tr>`).join('')||'<tr><td colspan=3>No data yet</td></tr>';
+document.getElementById('fps').innerHTML=(d.fingerprints||[]).map(x=>`<tr><td>${x.fp}</td><td>${x.ip}</td><td>${x.score}</td><td><span class="badge ${x.banned?'high':'low'}">${x.banned?'BANNED':'WATCH'}</span></td></tr>`).join('')||'<tr><td colspan=4>No fingerprints yet</td></tr>';
+}
+load(); setInterval(load,5000);
+</script></body></html>

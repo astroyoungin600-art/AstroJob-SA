@@ -136,3 +136,5 @@ table td{ padding:9px 8px !important; border-bottom:1px solid #E5E7EB !important
 
 /* SIEM headings - rainbow */
 h2, h3{ background:linear-gradient(90deg,#FF0080,#FFD600,#00E676,#00B0FF,#7C4DFF) !important; -webkit-background-clip:text !important; background-clip:text !important; color:transparent !important; }
+
+/* SIEM Intel - reuse cycle */
