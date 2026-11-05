@@ -64,3 +64,47 @@ body.dark .theme-toggle { background: #1E293B; color: #fff; border-color: #fff; 
 /* Footer buttons - stack, no overlap */
 .footer{ display:flex !important; flex-wrap:wrap !important; gap:8px !important; align-items:center !important; padding-bottom:70px !important; }
 .footer a{ white-space:nowrap !important; }
+
+/* --- FUTURISTIC - Colours change every 30s --- */
+@keyframes astroColorCycle{
+  0%{ background:linear-gradient(90deg,#FF0080,#FF8A00); box-shadow:0 0 18px #FF0080; }
+  15%{ background:linear-gradient(90deg,#FFD600,#00E676); box-shadow:0 0 18px #FFD600; }
+  30%{ background:linear-gradient(90deg,#00E676,#00B0FF); box-shadow:0 0 18px #00E676; }
+  45%{ background:linear-gradient(90deg,#00B0FF,#7C4DFF); box-shadow:0 0 18px #00B0FF; }
+  60%{ background:linear-gradient(90deg,#7C4DFF,#FF0080); box-shadow:0 0 18px #7C4DFF; }
+  75%{ background:linear-gradient(90deg,#00FFFF,#FF00FF); box-shadow:0 0 18px #00FFFF; }
+  90%{ background:linear-gradient(90deg,#FF6A00,#FF0080); box-shadow:0 0 18px #FF6A00; }
+  100%{ background:linear-gradient(90deg,#FF0080,#FF8A00); box-shadow:0 0 18px #FF0080; }
+}
+
+@keyframes neonPulse{
+  0%,100%{ filter:brightness(1); transform:scale(1); }
+  50%{ filter:brightness(1.25); transform:scale(1.03); }
+}
+
+/* Apply to ALL buttons - Party, Dark, Search, Apply, Coffee */
+.party-btn, .theme-toggle, .search-wrap button, .search-form button, .card a, .footer a, button{
+  animation: astroColorCycle 30s linear infinite, neonPulse 3s ease-in-out infinite !important;
+  color:#fff !important;
+  border:none !important;
+  border-radius:999px !important;
+  font-weight:900 !important;
+  text-shadow:0 1px 3px rgba(0,0,0,.4) !important;
+  transition:transform .2s !important;
+}
+
+/* Keep header links white on dark buttons? No - keep nav normal */
+.header a, .nav a, .card h3 a{
+  animation:none !important;
+  background:none !important;
+  box-shadow:none !important;
+  color:#111827 !important;
+  text-shadow:none !important;
+}
+
+/* Futuristic glass header */
+.header{
+  background:rgba(255,255,255,.85) !important;
+  backdrop-filter:blur(12px) !important;
+  border-bottom:1px solid rgba(255,255,255,.6) !important;
+}
