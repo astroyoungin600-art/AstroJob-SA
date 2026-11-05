@@ -45,3 +45,22 @@ body.dark .card h3, body.dark .logo b, body.dark h1, body.dark h2 { color: #fff 
 body.dark .card p, body.dark p { color: #CBD5E1 !important; }
 body.dark .search-wrap input, body.dark .search-form input, body.dark .search-wrap select, body.dark .search-form select { background: #0F172A !important; color: #fff !important; border-color: #475569 !important; }
 body.dark .theme-toggle { background: #1E293B; color: #fff; border-color: #fff; }
+
+/* --- FIX OVERLAP - DO NOT DELETE ABOVE --- */
+.header{ display:flex !important; align-items:flex-start !important; justify-content:space-between !important; gap:10px !important; flex-wrap:nowrap !important; padding:12px 12px 10px !important; overflow:visible !important; }
+.logo{ flex:1 1 auto !important; min-width:0 !important; font-size:19px !important; line-height:1.1 !important; }
+.logo b{ white-space:normal !important; }
+.header a, .nav{ flex-shrink:0 !important; }
+.nav{ display:flex !important; flex-direction:column !important; align-items:flex-end !important; gap:2px !important; text-align:right !important; }
+.nav a{ white-space:nowrap !important; font-size:14px !important; line-height:1.3 !important; }
+
+/* Move Dark button OFF header - to bottom right, never covers */
+.theme-toggle{ top:auto !important; bottom:18px !important; right:12px !important; position:fixed !important; z-index:999 !important; }
+
+/* Job titles never cut off */
+.card{ overflow:hidden !important; }
+.card h3{ white-space:normal !important; overflow:visible !important; text-overflow:clip !important; word-break:break-word !important; line-height:1.25 !important; }
+
+/* Footer buttons - stack, no overlap */
+.footer{ display:flex !important; flex-wrap:wrap !important; gap:8px !important; align-items:center !important; padding-bottom:70px !important; }
+.footer a{ white-space:nowrap !important; }
